@@ -1,7 +1,7 @@
 /* 庸医觉醒系统 · 核心逻辑 + 叙事层 + 多结局（单机 / 静态 / 无后端 / localStorage 存档）
  * 设计：大四不学无术的医学生，意外接入"庸医觉醒系统"，在脑海中进行多科室轮转。
  * 每科室轮转进度达 50% 与 100% 时，可三选一抽取该科室一项核心技能。
- * 指标：绩点(GPA /4.0) · 临床思维(/thinking /100) · 专业技能(/practice /100)
+ * 指标：绩点(GPA /3.6) · 临床思维(/thinking /100) · 专业技能(/practice /100)
  * 隐藏计分：医德(ethics) · 伤患(harmCount) —— 驱动多结局分支。
  * 病例均改编自真实公开事件，已做虚构化处理，不构成任何医疗建议。
  */
@@ -662,10 +662,21 @@
   function amb(t, m, d) { if (window.GameAudio) { if (t != null) window.GameAudio.setTension(t); if (m) window.GameAudio.setMode(m); if (d) window.GameAudio.setDept(d); } }
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
   function normalizeMetrics(metrics) {
-    metrics.gpa = clamp(metrics.gpa, 0, 4);
+    metrics.gpa = clamp(metrics.gpa, 0, 3.6);
     metrics.thinking = clamp(metrics.thinking, 0, 100);
     metrics.practice = clamp(metrics.practice, 0, 100);
     return metrics;
+  }
+  function applyGpaDelta(metrics, delta) {
+    if (!delta) return 0;
+    var adjusted = delta;
+    if (delta > 0) {
+      var remainingRatio = clamp((3.6 - metrics.gpa) / 1.5, 0, 1);
+      var baseGain = Math.min(delta, 0.08);
+      adjusted = baseGain * remainingRatio * remainingRatio;
+    }
+    metrics.gpa = clamp(metrics.gpa + adjusted, 0, 3.6);
+    return adjusted;
   }
   function deptById(id) { for (var i = 0; i < DEPARTMENTS.length; i++) if (DEPARTMENTS[i].id === id) return DEPARTMENTS[i]; return null; }
   function skillById(id) { for (var i = 0; i < DEPARTMENTS.length; i++) { var s = DEPARTMENTS[i].skills; for (var j = 0; j < s.length; j++) if (s[j].id === id) return s[j]; } return null; }
@@ -755,9 +766,9 @@
     setBar("exp-bar", (state.exp % EXP_PER_LEVEL) / EXP_PER_LEVEL * 100);
     setText("hud-exp-val", state.exp);
 
-    // 绩点 GPA：答对专业知识选项时升高，封顶 4.0
-    setBar("gpa-bar", m.gpa / 4 * 100);
-    setText("hud-gpa-val", m.gpa.toFixed(2) + " / 4.0");
+    // 绩点 GPA：答对专业知识选项时升高，越接近 3.6 增长越慢。
+    setBar("gpa-bar", m.gpa / 3.6 * 100);
+    setText("hud-gpa-val", m.gpa.toFixed(2) + " / 3.6");
 
     // 能力条：临床思维 / 专业技能
     setBar("thinking-bar", m.thinking);
@@ -800,7 +811,7 @@
     var m = s.metrics;
     var Tn = clamp(m.thinking, 0, 100) / 100;
     var Pn = clamp(m.practice, 0, 100) / 100;
-    var Gn = clamp(m.gpa, 0, 4) / 4;
+    var Gn = clamp(m.gpa, 0, 3.6) / 3.6;
     var En = 0.5 + 0.5 * Math.tanh(s.ethics / 120);
     var harmPen = s.harmCount * 2.0;
     var raw = 100 * (0.22 * Tn + 0.22 * Pn + 0.10 * Gn + 0.46 * En) - harmPen;
@@ -1181,14 +1192,14 @@
   function applyChoiceEffects(ch) {
     var m = state.metrics;
     var effects = derivedChoiceEffects(ch);
-    if (effects.gpa) m.gpa += effects.gpa;
+    var gpaDelta = (effects.gpa || 0) + (ch.correct ? 0.05 : 0);
+    if (gpaDelta) applyGpaDelta(m, gpaDelta);
     if (effects.thinking) m.thinking += effects.thinking;
     if (effects.practice) m.practice += effects.practice;
     if (ch.ethics) state.ethics += ch.ethics;
     if (ch.harm) state.harmCount += 1;
     // 专业知识答对（correct:true）→ 绩点加成：与医德/三核心推导解耦，单独奖励专业判断力。
     // 字面量 0.05 与顶部 CORRECT_GPA 保持同步（balance_sim.js 逐字节抽取本函数）。
-    if (ch.correct) m.gpa += 0.05;
     normalizeMetrics(m);
   }
 
@@ -1219,7 +1230,7 @@
     if (ch.risk) {
       var chance = clamp(ch.risk.chance - state.riskReduce, 0.05, 1);
       if (Math.random() < chance) {
-        if (ch.risk.failEffects.gpa) m.gpa += ch.risk.failEffects.gpa;
+        if (ch.risk.failEffects.gpa) applyGpaDelta(m, ch.risk.failEffects.gpa);
         if (ch.risk.failEffects.thinking) m.thinking += ch.risk.failEffects.thinking;
         if (ch.risk.failEffects.practice) m.practice += ch.risk.failEffects.practice;
         state.harmCount += 1;
@@ -1488,7 +1499,7 @@
     var d = deptById(pendingDraw.deptId);
     if (state.owned.indexOf(sk.id) < 0) state.owned.push(sk.id);
     var m = state.metrics;
-    if (sk.effect.gpa) m.gpa += sk.effect.gpa;
+    if (sk.effect.gpa) applyGpaDelta(m, sk.effect.gpa);
     if (sk.effect.thinking) m.thinking += sk.effect.thinking;
     if (sk.effect.practice) m.practice += sk.effect.practice;
     if (sk.riskReduce) state.riskReduce += sk.riskReduce;

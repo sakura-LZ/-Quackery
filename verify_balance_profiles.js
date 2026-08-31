@@ -40,8 +40,8 @@ for (const key of required) {
       throw new Error(key + " is missing numeric summary for " + metric);
     }
   }
-  if (profile.metrics.gpa.min < 0 || profile.metrics.gpa.max > 4) {
-    throw new Error(key + " produced GPA outside 0-4");
+  if (profile.metrics.gpa.min < 0 || profile.metrics.gpa.max > 3.6) {
+    throw new Error(key + " produced GPA outside 0-3.6");
   }
   if (profile.metrics.thinking.min < 0 || profile.metrics.thinking.max > 100) {
     throw new Error(key + " produced clinical thinking outside 0-100");
@@ -66,6 +66,7 @@ const expectations = [
   [p.competenceFirst.metrics.thinking.mean >= 70 && p.competenceFirst.metrics.practice.mean >= 70, "Competence-first should develop both professional dimensions"],
   [(p.competenceFirst.endings.hidden || 0) > 0, "Competence-first should prove the hidden ending is reachable"],
   [p.gpaFirst.metrics.gpa.mean >= p.random.metrics.gpa.mean, "GPA-first should improve GPA"],
+  [p.gpaFirst.metrics.gpa.mean < 3.6, "Even GPA-first should approach rather than instantly fill the 3.6 ceiling"],
   [p.ethicsLast.metrics.ethics.mean <= p.random.metrics.ethics.mean, "Ethics-last should reduce ethics"]
 ];
 

@@ -5,6 +5,9 @@ const source = fs.readFileSync("game.js", "utf8");
 if (!source.includes('setText("ethic-val", Math.round(ethicPct))')) {
   throw new Error("HUD ethics summary must use the visible 0-100 ethics score");
 }
+if (!source.includes('m.gpa.toFixed(2) + " / 3.6"')) {
+  throw new Error("HUD must display the 3.6 GPA ceiling");
+}
 function extractFn(name) {
   const start = source.indexOf("function " + name + "(");
   if (start < 0) return null;

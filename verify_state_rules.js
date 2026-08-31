@@ -27,6 +27,7 @@ const runtime = new Function(
   "clamp",
   "var state = null; var CORRECT_GPA = 0.05;" +
     extractFn("normalizeMetrics") + "\n" +
+    extractFn("applyGpaDelta") + "\n" +
     extractFn("isHandsOnClinicalAction") + "\n" +
     extractFn("inferProfessionalEffects") + "\n" +
     extractFn("derivedChoiceEffects") + "\n" +
@@ -49,7 +50,7 @@ function makeState(overrides) {
   }, overrides || {});
 }
 
-const high = makeState({ metrics: { gpa: 3.99, thinking: 99, practice: 99 } });
+const high = makeState({ metrics: { gpa: 3.59, thinking: 99, practice: 99 } });
 runtime.setState(high);
 runtime.applyChoiceEffects({
   text: "完成穿刺和缝合操作",
@@ -58,8 +59,29 @@ runtime.applyChoiceEffects({
   correct: true,
   harm: false
 });
-if (high.metrics.gpa !== 4 || high.metrics.thinking !== 100 || high.metrics.practice !== 100) {
-  throw new Error("Choice settlement must cap GPA at 4 and professional metrics at 100");
+if (high.metrics.gpa > 3.6 || high.metrics.gpa <= 3.59 || high.metrics.thinking !== 100 || high.metrics.practice !== 100) {
+  throw new Error("Choice settlement must approach but never exceed 3.6 and must cap professional metrics at 100");
+}
+
+const overflow = makeState({ metrics: { gpa: 9, thinking: 50, practice: 50 } });
+runtime.normalizeMetrics(overflow.metrics);
+if (overflow.metrics.gpa !== 3.6) {
+  throw new Error("Loaded or legacy GPA values must be capped at 3.6");
+}
+
+const early = makeState({ metrics: { gpa: 2.1, thinking: 50, practice: 50 } });
+const late = makeState({ metrics: { gpa: 3.4, thinking: 50, practice: 50 } });
+const sameGain = {
+  text: "完成穿刺操作",
+  effects: { gpa: 0.2, thinking: -1, practice: 1 },
+  ethics: 0
+};
+runtime.setState(early);
+runtime.applyChoiceEffects(sameGain);
+runtime.setState(late);
+runtime.applyChoiceEffects(sameGain);
+if (!((early.metrics.gpa - 2.1) > (late.metrics.gpa - 3.4))) {
+  throw new Error("Positive GPA gains must slow down as GPA approaches 3.6");
 }
 
 const low = makeState({ metrics: { gpa: 0.01, thinking: 1, practice: 1 } });
