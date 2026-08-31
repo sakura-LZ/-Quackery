@@ -206,7 +206,6 @@ a { color: var(--accent); }
 .hud-bar.vit i { background: linear-gradient(90deg, var(--success), #6fd4a8); }
 .hud-bar.think i { background: linear-gradient(90deg, var(--accent-2), #ffc999); }
 .hud-bar.prac i { background: linear-gradient(90deg, var(--amber), #ffe4a0); }
-.hud-bar.relations i { background: linear-gradient(90deg, #3fb98d, #9be7c4); }
 .hud-bar.ethics i { background: linear-gradient(90deg, #a78bfa, #c4b5fd); }
 
 .hud-info { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }

@@ -478,8 +478,8 @@ var DEPT = {
           outcome: "你把『伤元气』接住，再用 MRI 靶向把不必要穿刺降到最低，他松动了。思维+6。" },
         { text: "顺他『调理』不查，拖延观察", effects: { gpa: 0, thinking: -3, practice: -1 }, ethics: -4, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4 }, failText: "半年后骨痛就诊，已是多发骨转移，他悔得攥着床栏。" },
           outcome: "你顺着他，埋了雷。思维-3。" },
-        { text: "不沟通直接按流程安排穿刺", effects: { gpa: -0.05, thinking: 1, practice: 3 }, ethics: -1, risk: { chance: 0.35, failEffects: { thinking: -3, practice: -3 }, failText: "硬来让他更抵触，签字又反悔，科里点了你的名。" },
-          outcome: "你走了流程，却没赢得信任。专业技能+3。" }
+        { text: "不沟通直接按流程安排穿刺", effects: { gpa: -0.05, thinking: 1, practice: 6 }, ethics: -1, risk: { chance: 0.35, failEffects: { thinking: -3, practice: -3 }, failText: "硬来让他更抵触，签字又反悔，科里点了你的名。" },
+          outcome: "你练了流程执行，却没赢得信任。专业技能+6。" }
       ],
       dialogue: {
         start: "s0",

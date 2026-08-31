@@ -2,6 +2,9 @@ const fs = require("fs");
 const vm = require("vm");
 
 const source = fs.readFileSync("game.js", "utf8");
+if (!source.includes('setText("ethic-val", Math.round(ethicPct))')) {
+  throw new Error("HUD ethics summary must use the visible 0-100 ethics score");
+}
 function extractFn(name) {
   const start = source.indexOf("function " + name + "(");
   if (start < 0) return null;
@@ -17,31 +20,33 @@ function extractFn(name) {
   return null;
 }
 
-const infer = extractFn("inferRelationsEffect");
+const infer = extractFn("inferProfessionalEffects");
 const match = extractFn("derivedChoiceEffects");
+const handsOn = extractFn("isHandsOnClinicalAction");
 
 if (!infer || !match) {
   throw new Error("Missing tradeoff helpers for visible choice feedback");
 }
 
 const context = { CORRECT_GPA: 0.05 };
-vm.runInNewContext(infer + "\n" + match + "\nthis.derivedChoiceEffects = derivedChoiceEffects;", context);
+vm.runInNewContext(handsOn + "\n" + infer + "\n" + match + "\nthis.derivedChoiceEffects = derivedChoiceEffects;", context);
 
-const positive = context.derivedChoiceEffects({ ethics: 3 });
-const negative = context.derivedChoiceEffects({ ethics: -2 });
+const assessment = context.derivedChoiceEffects({ text: "先核实病史和检查依据", ethics: -2 });
+const shortcut = context.derivedChoiceEffects({ text: "直接建立静脉通路并处理", ethics: 3 });
 const explicit = context.derivedChoiceEffects({
+  text: "完成穿刺和缝合操作",
   ethics: 5,
   effects: { gpa: 0.1, thinking: 6, practice: 3 }
 });
 
-if (positive.thinking !== undefined || positive.practice !== undefined || positive.relations !== -1) {
-  throw new Error("Positive ethics must not automatically grant clinical ability");
+if (!(assessment.thinking > 0) || !(assessment.practice < 0)) {
+  throw new Error("Assessment choices should favor thinking regardless of ethics sign");
 }
-if (negative.thinking !== undefined || negative.relations !== 1) {
-  throw new Error("Negative ethics must not automatically reduce clinical ability");
+if (!(shortcut.practice > 0) || !(shortcut.thinking < 0)) {
+  throw new Error("Action-first shortcuts should favor practice regardless of ethics sign");
 }
-if (explicit.thinking !== 6 || explicit.practice !== 3 || explicit.gpa !== 0.1 || explicit.relations !== -1) {
-  throw new Error("Explicit medical effects must remain authoritative while receiving a separate tradeoff");
+if (explicit.thinking !== 6 || explicit.practice !== 3) {
+  throw new Error("Explicit medical effects must remain authoritative");
 }
 
-console.log("OK: visible choice feedback preserves medical effects and exposes multi-dimensional tradeoffs");
+console.log("OK: visible choice feedback derives professional effects independently from ethics");

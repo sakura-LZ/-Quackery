@@ -1,7 +1,7 @@
 /* 庸医觉醒系统 · 核心逻辑 + 叙事层 + 多结局（单机 / 静态 / 无后端 / localStorage 存档）
  * 设计：大四不学无术的医学生，意外接入"庸医觉醒系统"，在脑海中进行多科室轮转。
  * 每科室轮转进度达 50% 与 100% 时，可三选一抽取该科室一项核心技能。
- * 指标：绩点(GPA /4.0) · 临床思维(/thinking /100) · 专业技能(/practice /100) · 人情世故(relations /100)
+ * 指标：绩点(GPA /4.0) · 临床思维(/thinking /100) · 专业技能(/practice /100)
  * 隐藏计分：医德(ethics) · 伤患(harmCount) —— 驱动多结局分支。
  * 病例均改编自真实公开事件，已做虚构化处理，不构成任何医疗建议。
  */
@@ -208,8 +208,8 @@
               outcome: "分型讲清楚，患者信服。思维+5。" },
             { text: "让他回去用皮带勒住", effects: { gpa: 0, thinking: -2, practice: -1 }, ethics: -3, harm: true,
               outcome: "民间偏方害人，嵌顿风险没交代。思维-2。" },
-            { text: "直接推回去了事", effects: { gpa: -0.05, thinking: 1, practice: 3 }, ethics: -1, risk: { chance: 0.3, failEffects: { thinking: -3, practice: -3 }, failText: "没排除嵌顿就硬推，老人疼得冒汗，你也不敢了。" },
-              outcome: "手法还行，但前提没查。专业技能+3。" }
+            { text: "直接推回去了事", effects: { gpa: -0.05, thinking: 1, practice: 5 }, ethics: -1, risk: { chance: 0.3, failEffects: { thinking: -3, practice: -3 }, failText: "没排除嵌顿就硬推，老人疼得冒汗，你也不敢了。" },
+              outcome: "手法练到了，但前提没查。专业技能+5。" }
           ]
         },
         {
@@ -344,8 +344,8 @@
               outcome: "你苦求、上报、把每一步写进病历。没赢，但你站对了。思维+6。" },
             { text: "尊重家属签字，不手术", effects: { gpa: 0.05, thinking: -4, practice: -2 }, ethics: -2, harm: true, risk: { chance: 0.35, failEffects: { thinking: -5, gpa: -0.2 }, failText: "胎心先停了。你看着监护仪，第一次恨'流程'这两个字。" },
               outcome: "你守了规则，也接住了后果。思维-4。" },
-            { text: "瞒着家属直接剖", effects: { gpa: -0.1, thinking: 1, practice: 3 }, ethics: -3, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4, gpa: -0.2 }, failText: "你救了孩子，却被家属以'侵犯选择权'告上法庭，科里开会点了你的名。" },
-              outcome: "你赌了命，也赌了前途。专业技能+3。" }
+            { text: "瞒着家属直接剖", effects: { gpa: -0.1, thinking: 1, practice: 6 }, ethics: -3, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4, gpa: -0.2 }, failText: "你救了孩子，却被家属以'侵犯选择权'告上法庭，科里开会点了你的名。" },
+              outcome: "你练到了急诊手术，也赌了命和前途。专业技能+6。" }
           ]
         },
         {
@@ -358,7 +358,7 @@
           choices: [
             { text: "确认本人意愿，启动紧急评估并上报", effects: { gpa: 0.1, thinking: 6, practice: 5 }, ethics: 6,
               outcome: "你蹲下来听她说，而不是听家属的。流程被你撬动了一道缝。思维+6。" },
-            { text: "按授权书听家属的，继续顺产", effects: { gpa: 0.05, thinking: -4, practice: -2 }, ethics: -5, harm: true, risk: { chance: 0.35, failEffects: { thinking: -5, practice: -3 }, failText: "她情绪失控的瞬间，你没在。后来才知道，那是最后一句话。" },
+            { text: "按授权书听家属的，继续顺产", effects: { gpa: 0.05, thinking: -4, practice: 4 }, ethics: -5, harm: true, risk: { chance: 0.35, failEffects: { thinking: -5, practice: -3 }, failText: "她情绪失控的瞬间，你没在。后来才知道，那是最后一句话。" },
               outcome: "你守了授权，却没听见本人。思维-4。" },
             { text: "躲进办公室等交接", effects: { gpa: -0.05, thinking: -3, practice: -2 }, ethics: -3,
               outcome: "实刁钻的活推给别人，这科你白轮。思维-3。" }
@@ -374,7 +374,7 @@
           choices: [
             { text: "核实身份与陪同关系，触发强制报告并联系监护人", effects: { gpa: 0.1, thinking: 6, practice: 4 }, ethics: 6,
               outcome: "你没放她走。卫健委后来认定医院做对了。思维+6。" },
-            { text: "信她'已工作'，让她自签手术", effects: { gpa: 0.05, thinking: -4, practice: -1 }, ethics: -5, harm: true, risk: { chance: 0.4, failEffects: { thinking: -5, gpa: -0.15 }, failText: "陌生人签字，家属不知情。她抑郁了很久，你也在笔录里待了一下午。" },
+            { text: "信她'已工作'，让她自签手术", effects: { gpa: 0.05, thinking: -4, practice: 3 }, ethics: -5, harm: true, risk: { chance: 0.4, failEffects: { thinking: -5, gpa: -0.15 }, failText: "陌生人签字，家属不知情。她抑郁了很久，你也在笔录里待了一下午。" },
               outcome: "你省了事，埋了雷。思维-4。" },
             { text: "只做手术不问来由", effects: { gpa: 0, thinking: -3, practice: 0 }, ethics: -3,
               outcome: "手快，但没看见人。思维-3。" }
@@ -402,7 +402,7 @@
           choices: [
             { text: "用无血替代方案，同时申请法院授权备血", effects: { gpa: 0.1, thinking: 6, practice: 5 }, ethics: 6,
               outcome: "你一边保住孩子，一边把授权令摆到父母面前。思维+6。" },
-            { text: "尊重父母，放弃输血", effects: { gpa: 0.05, thinking: -5, practice: -3 }, ethics: -6, harm: true, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4 }, failText: "孩子心衰那一夜，你守着没敢动。后来输了，但多受了罪。" },
+            { text: "尊重父母，改走无血方案但不申请授权", effects: { gpa: 0.05, thinking: 3, practice: 2 }, ethics: -3, harm: true, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4 }, failText: "替代方案没能撑住循环，孩子还是进了心衰。后来紧急输上血，却多受了一轮罪。" },
               outcome: "你护了家长的信仰，悬了孩子的命。思维-5。" },
             { text: "拖着等上级决定", effects: { gpa: 0, thinking: -3, practice: -1 }, ethics: -3,
               outcome: "把球踢走，孩子等不起。思维-3。" }
@@ -450,7 +450,7 @@
           choices: [
             { text: "发育筛查+多学科评估", effects: { gpa: 0.1, thinking: 5, practice: 2 }, ethics: 4,
               outcome: "早筛一句顶后面十年。思维+5。" },
-            { text: "贵人语迟打发", effects: { gpa: 0.05, thinking: -4, practice: -1 }, ethics: -4,
+            { text: "贵人语迟打发", effects: { gpa: 0.25, thinking: -4, practice: -1 }, ethics: -4,
               outcome: "一句俗语耽误干预窗口。思维-4。" },
             { text: "开补脑保健品", effects: { gpa: 0, thinking: -2, practice: 0 }, ethics: -2,
               outcome: "没诊断就进补，钱白花。思维-2。" }
@@ -510,7 +510,7 @@
           choices: [
             { text: "坚持夫妇同查，先男科评估", effects: { gpa: 0.1, thinking: 5, practice: 4 }, ethics: 5,
               outcome: "你把男方请进诊室。少弱精，真相大白。思维+5。" },
-            { text: "只催女方再查", effects: { gpa: 0.05, thinking: -3, practice: -1 }, ethics: -4,
+            { text: "只催女方再查", effects: { gpa: 0.05, thinking: -3, practice: 2 }, ethics: -4,
               outcome: "压力全给一方，男方更躲。思维-3。" },
             { text: "乱开补精偏方", effects: { gpa: 0, thinking: -2, practice: 0 }, ethics: -2,
               outcome: "没评估就进补，不对症。思维-2。" }
@@ -568,7 +568,7 @@
   }
 
   /* ---------------- 结局判定 ---------------- */
-  // 入参：state.metrics(gpa/thinking/practice) · state.relations · state.ethics · state.harmCount · 已习得技能数
+  // 入参：state.metrics(gpa/thinking/practice) · state.ethics · state.harmCount · 已习得技能数
   function determineEnding() {
     var m = state.metrics;
     var et = state.ethics;
@@ -576,8 +576,8 @@
     var owned = state.owned.length;
 
     // 注：30 病例 + 逐轮计分后，医德量级约 ±200、伤患 0~20，以下阈值已按平衡器重调。
-    // 真·觉醒：零伤患 + 医德高 + 全技能（最优解的隐藏结局）
-    if (hc === 0 && et >= 100 && owned >= 12) return "hidden";
+    // 真·觉醒：零伤患、医德高、技能积累充分，且临床判断与执行能力都达到成熟线。
+    if (hc === 0 && et >= 100 && owned >= 12 && m.thinking >= 70 && m.practice >= 70) return "hidden";
     // 庸医/事故：伤患过多（≥20 次），或极度无德
     if (hc >= 20 || et <= -160) return "malpractice";
     // 被告/纠纷：有伤患（≥6 次）或医德明显偏低
@@ -603,7 +603,6 @@
       active: DEPARTMENTS[0].id,
       owned: [],
       riskReduce: 0,
-      relations: 0,
       ethics: 0,
       harmCount: 0,
       log: [],
@@ -626,12 +625,13 @@
       if (!s.owned) s.owned = [];
       if (!s.log) s.log = [];
       if (typeof s.riskReduce !== "number") s.riskReduce = 0;
-      if (typeof s.relations !== "number") s.relations = 0;
+      if (Object.prototype.hasOwnProperty.call(s, "relations")) delete s.relations;
       if (typeof s.ethics !== "number") s.ethics = 0;
       if (typeof s.harmCount !== "number") s.harmCount = 0;
       if (typeof s.graduated !== "boolean") s.graduated = false;
       if (typeof s.endingType !== "string") s.endingType = null;
       if (typeof s.introShown !== "boolean") s.introShown = false;
+      normalizeMetrics(s.metrics);
       return s;
     } catch (e) {
       return freshState();
@@ -661,6 +661,12 @@
   function sfx(name, opts) { if (window.GameAudio) window.GameAudio.trigger(name, opts); }
   function amb(t, m, d) { if (window.GameAudio) { if (t != null) window.GameAudio.setTension(t); if (m) window.GameAudio.setMode(m); if (d) window.GameAudio.setDept(d); } }
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function normalizeMetrics(metrics) {
+    metrics.gpa = clamp(metrics.gpa, 0, 4);
+    metrics.thinking = clamp(metrics.thinking, 0, 100);
+    metrics.practice = clamp(metrics.practice, 0, 100);
+    return metrics;
+  }
   function deptById(id) { for (var i = 0; i < DEPARTMENTS.length; i++) if (DEPARTMENTS[i].id === id) return DEPARTMENTS[i]; return null; }
   function skillById(id) { for (var i = 0; i < DEPARTMENTS.length; i++) { var s = DEPARTMENTS[i].skills; for (var j = 0; j < s.length; j++) if (s[j].id === id) return s[j]; } return null; }
   function deptTotal(d) { return d.cases.length; }
@@ -685,10 +691,10 @@
 
   function effectText(eff) {
     var parts = [];
+    function fmt(value) { return parseFloat(value.toFixed(2)); }
     if (eff.gpa) parts.push("绩点" + (eff.gpa > 0 ? "+" : "") + eff.gpa.toFixed(2).replace(/0$/, ""));
-    if (eff.thinking) parts.push("思维" + (eff.thinking > 0 ? "+" : "") + eff.thinking);
-    if (eff.practice) parts.push("专业技能" + (eff.practice > 0 ? "+" : "") + eff.practice);
-    if (eff.relations) parts.push("人情世故" + (eff.relations > 0 ? "+" : "") + eff.relations);
+    if (eff.thinking) parts.push("思维" + (eff.thinking > 0 ? "+" : "") + fmt(eff.thinking));
+    if (eff.practice) parts.push("专业技能" + (eff.practice > 0 ? "+" : "") + fmt(eff.practice));
     return parts.join(" · ");
   }
 
@@ -700,9 +706,8 @@
       return '<span class="' + cls + '">' + label + (val > 0 ? "+" : "") + val + '</span>';
     }
     if (eff.gpa) parts.push(mk("绩点", parseFloat(eff.gpa.toFixed(2))));
-    if (eff.thinking) parts.push(mk("思维", eff.thinking));
-    if (eff.practice) parts.push(mk("专业技能", eff.practice));
-    if (eff.relations) parts.push(mk("人情世故", eff.relations));
+    if (eff.thinking) parts.push(mk("思维", parseFloat(eff.thinking.toFixed(2))));
+    if (eff.practice) parts.push(mk("专业技能", parseFloat(eff.practice.toFixed(2))));
     if (correct) parts.push('<span class="up">✓答对 · 绩点+' + CORRECT_GPA.toFixed(2) + '</span>');
     if (ethics) parts.push(mk("医德", ethics));
     if (risk) parts.push('<span style="color:var(--accent)">⚠风险</span>');
@@ -744,9 +749,7 @@
   /* ---------------- 渲染 ---------------- */
   function renderStats() {
     var m = state.metrics;
-    m.gpa = clamp(m.gpa, 0, 4);
-    m.thinking = clamp(m.thinking, 0, 100);
-    m.practice = clamp(m.practice, 0, 100);
+    normalizeMetrics(m);
 
     // 经验 EXP：病历推进积累，条子显示「本级内」进度（每 EXP_PER_LEVEL 升一级）
     setBar("exp-bar", (state.exp % EXP_PER_LEVEL) / EXP_PER_LEVEL * 100);
@@ -762,11 +765,6 @@
     setBar("practice-bar", m.practice);
     setText("practice-value", Math.round(m.practice));
 
-    // 人情世故：关系协调与组织生存能力，独立于医德和觉醒分。
-    var relationsPct = clamp(50 + state.relations / 4, 0, 100);
-    setBar("relations-bar", relationsPct);
-    setText("relations-value", Math.round(relationsPct));
-
     // 医德条：累计医德归一到 0-100（50 为中性）
     var ethicPct = clamp(50 + state.ethics, 0, 100);
     setBar("ethic-bar", ethicPct);
@@ -781,8 +779,7 @@
     var lv = 1 + Math.floor(state.exp / EXP_PER_LEVEL);
     setText("hud-lv", lv);
     setText("hud-own", state.owned.length);
-    setText("relations-val", (state.relations > 0 ? "+" : "") + Math.round(state.relations));
-    setText("ethic-val", (state.ethics > 0 ? "+" : "") + state.ethics);
+    setText("ethic-val", Math.round(ethicPct));
     setText("harm-val", state.harmCount);
     setText("harm-foot-val", state.harmCount);
 
@@ -1115,18 +1112,30 @@
     toast("所有科室均已轮转完成");
   }
 
-  function inferRelationsEffect(ch) {
-    if (typeof ch.relations === "number") return ch.relations;
+  function isHandsOnClinicalAction(text) {
+    var actionable = (text || "").replace(/不查体|没查体|不检查|不手术|不操作/g, "");
+    return /查体|触诊|听诊|叩诊|心电图|超声|抽血|穿刺|扎针|活检|诊刮|手术|切除|剖|缝|止血|包扎|清创|引流|插管|气道|给氧|静脉通路|建立.{0,6}通路|输血|补液|注射|复苏|按压|推回|复位|导尿|腔镜|刷手|铺巾|用药|开药|服药|药|抗生素|胰岛素|肾上腺素/.test(actionable);
+  }
+
+  function inferProfessionalEffects(ch) {
     var text = ch.text || "";
-    var collaborative = /一起|共同|商量|沟通|解释|说明|共情|安抚|陪|倾听|听他|听她|平视|握.{0,2}手|稳住|协调/;
-    var abrasive = /冷笑|讽刺|反问|训|压他|压她|只搬法条|报警|叫保安|强制|不沟通|当场揭|直接拒绝/;
-    var accommodating = /顺着|配合|按上级|听家属|等家属|含糊|点头|默默|先等等|观察再说/;
-    var avoidant = /打发|拖着|装没|假装|不接话|愣着|躲|退到门边|不管|走开/;
-    if (abrasive.test(text)) return -2;
-    if (collaborative.test(text)) return 2;
-    if (accommodating.test(text)) return 2;
-    if (avoidant.test(text)) return -1;
-    return 0;
+    var assessment = /评估|核实|检查|查体|病史|鉴别|确认|复查|分级|追问|问清|依据|记录|观察|考虑|判断|报告|分期|培养/;
+    var communication = /尊重|倾听|沟通|解释|告知|安抚|协商|共同决策|平视|握.*手|确认.*意愿/;
+    var shortcut = /直接|一律|只做|先开|顺着|配合|按上级|含糊|打发|立刻.*广谱/;
+    var avoidant = /拖着|装没|假装|不接话|愣着|躲|退到门边|不管|走开|先等等|等家属/;
+    var hash = 0;
+    for (var i = 0; i < text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+    var scale = Math.round((0.55 + ((hash >>> 0) % 901) / 1000) * 1000) / 1000;
+    function rounded(value) { return Math.round(value * 1000) / 1000; }
+    var handsOn = isHandsOnClinicalAction(text);
+    if (avoidant.test(text)) return { gpa: rounded(0.05 + scale * 0.05), thinking: rounded(-scale * 0.5), practice: -scale };
+    if (handsOn && shortcut.test(text)) return { thinking: -scale, practice: rounded(scale * 3) };
+    if (handsOn && assessment.test(text)) return { thinking: scale, practice: scale };
+    if (handsOn) return { thinking: -scale, practice: scale };
+    if (assessment.test(text)) return { thinking: scale, practice: -scale };
+    if (communication.test(text)) return { thinking: scale, practice: -scale };
+    if (shortcut.test(text)) return { gpa: rounded(0.05 + scale * 0.05), thinking: -scale, practice: -scale };
+    return { thinking: scale, practice: -scale };
   }
 
   function derivedChoiceEffects(ch) {
@@ -1136,27 +1145,35 @@
     if (source.thinking) effects.thinking = source.thinking;
     if (source.practice) effects.practice = source.practice;
 
-    var ethics = ch.ethics || 0;
     if (!ch.effects) {
-      // 普通对话不再按医德推导临床能力；只有病例显式 effects / correct 才代表医学判断。
-      if (ethics === 0) effects.practice = 1;
+      var inferred = inferProfessionalEffects(ch);
+      if (inferred.gpa) effects.gpa = inferred.gpa;
+      effects.thinking = inferred.thinking;
+      effects.practice = inferred.practice;
     }
 
-    effects.relations = inferRelationsEffect(ch);
+    // 沟通、尊重与知情同意训练临床判断，但只有真实临床操作可以增加专业技能。
+    if (effects.practice > 0 && !isHandsOnClinicalAction(ch.text || "")) {
+      effects.thinking = Math.round(((effects.thinking || 0) + effects.practice * 0.5) * 1000) / 1000;
+      effects.practice = -Math.max(0.5, Math.round(effects.practice * 0.25 * 1000) / 1000);
+    }
+    if (!isHandsOnClinicalAction(ch.text || "") && effects.practice < 0) {
+      var studyGain = Math.min(0.8, Math.round((0.05 + Math.abs(effects.practice) * 0.12 + Math.abs(Math.min(0, effects.thinking || 0)) * 0.04) * 100) / 100);
+      effects.gpa = Math.max(effects.gpa || 0, studyGain);
+    }
 
-    var values = [effects.gpa || 0, effects.thinking || 0, effects.practice || 0, effects.relations || 0, ethics, ch.correct ? CORRECT_GPA : 0];
+    var values = [effects.gpa || 0, effects.thinking || 0, effects.practice || 0, ch.ethics || 0, ch.correct ? CORRECT_GPA : 0, ch.risk ? -1 : 0, ch.harm ? -1 : 0];
     var hasGain = values.some(function (value) { return value > 0; });
     var hasCost = values.some(function (value) { return value < 0; });
 
-    // 全负选项补“短期好办事”的关系收益；全正选项补时间/考试机会成本或关系摩擦。
+    // 全面退缩会换来短期应试时间；全面投入的机会成本则随专业收益增大，避免用固定 -0.05 伪装取舍。
     if (!hasGain) {
-      if (effects.relations < 0) effects.practice = 1;
-      else effects.relations = Math.max(1, effects.relations || 0);
+      var professionalLoss = Math.abs(Math.min(0, effects.thinking || 0)) + Math.abs(Math.min(0, effects.practice || 0));
+      effects.gpa = Math.min(0.3, Math.round((0.05 + professionalLoss * 0.04) * 100) / 100);
     }
     if (!hasCost) {
-      if (effects.relations > 0 && ch.effects) effects.gpa = -0.05;
-      else if (effects.relations > 0) effects.practice = -0.25;
-      else effects.relations = -1;
+      var professionalGain = Math.max(0, effects.thinking || 0) + Math.max(0, effects.practice || 0);
+      effects.gpa = -Math.min(0.08, Math.round((0.01 + professionalGain * 0.003) * 100) / 100);
     }
     return effects;
   }
@@ -1167,12 +1184,12 @@
     if (effects.gpa) m.gpa += effects.gpa;
     if (effects.thinking) m.thinking += effects.thinking;
     if (effects.practice) m.practice += effects.practice;
-    if (effects.relations) state.relations += effects.relations;
     if (ch.ethics) state.ethics += ch.ethics;
     if (ch.harm) state.harmCount += 1;
     // 专业知识答对（correct:true）→ 绩点加成：与医德/三核心推导解耦，单独奖励专业判断力。
     // 字面量 0.05 与顶部 CORRECT_GPA 保持同步（balance_sim.js 逐字节抽取本函数）。
     if (ch.correct) m.gpa += 0.05;
+    normalizeMetrics(m);
   }
 
   function finalizeCase(d, c, ch, msg, failed) {
@@ -1208,6 +1225,7 @@
         state.harmCount += 1;
         failed = true;
         msg = ch.risk.failText;
+        normalizeMetrics(m);
       }
     }
     logMsg(d.name, msg);
@@ -1474,6 +1492,7 @@
     if (sk.effect.thinking) m.thinking += sk.effect.thinking;
     if (sk.effect.practice) m.practice += sk.effect.practice;
     if (sk.riskReduce) state.riskReduce += sk.riskReduce;
+    normalizeMetrics(m);
 
     logMsg(d.name, "习得核心技能【" + sk.name + "】" + (effectText(sk.effect) ? "（" + effectText(sk.effect) + "）" : ""));
 

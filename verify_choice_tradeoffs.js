@@ -19,14 +19,15 @@ function extractFn(name) {
   return null;
 }
 
-const inferSource = extractFn("inferRelationsEffect");
+const inferSource = extractFn("inferProfessionalEffects");
 const deriveSource = extractFn("derivedChoiceEffects");
-if (!inferSource || !deriveSource) {
-  throw new Error("Choice tradeoff helpers must include the relations dimension");
+const handsOnSource = extractFn("isHandsOnClinicalAction");
+if (!inferSource || !deriveSource || !handsOnSource) {
+  throw new Error("Choice tradeoff helpers must derive professional effects independently from ethics");
 }
 
 const api = new Function(
-  "var CORRECT_GPA = 0.05;\n" + inferSource + "\n" + deriveSource + "\nreturn { derivedChoiceEffects };"
+  "var CORRECT_GPA = 0.05;\n" + handsOnSource + "\n" + inferSource + "\n" + deriveSource + "\nreturn { derivedChoiceEffects };"
 )();
 
 function extractDepartments() {
@@ -58,17 +59,54 @@ for (const id of ["internal", "surgery", "emergency", "obgyn", "pediatrics", "ur
 const failures = [];
 let checked = 0;
 
+function choiceVector(choice) {
+  const effects = api.derivedChoiceEffects(choice);
+  return [
+    (effects.gpa || 0) + (choice.correct ? 0.05 : 0),
+    effects.thinking || 0,
+    effects.practice || 0,
+    choice.ethics || 0,
+    choice.harm ? -1 : 0,
+    choice.risk ? -choice.risk.chance : 0
+  ];
+}
+
+function checkDominance(choices, tag) {
+  if (!choices || choices.length < 2) return;
+  const vectors = choices.map(choiceVector);
+  for (let worse = 0; worse < choices.length; worse += 1) {
+    for (let better = 0; better < choices.length; better += 1) {
+      if (worse === better) continue;
+      const noWorse = vectors[better].every((value, index) => value >= vectors[worse][index]);
+      const strictlyBetter = vectors[better].some((value, index) => value > vectors[worse][index]);
+      if (noWorse && strictlyBetter) {
+        failures.push(tag + " contains a dominated choice: " + JSON.stringify({
+          dominated: choices[worse].text,
+          dominant: choices[better].text,
+          dominatedVector: vectors[worse],
+          dominantVector: vectors[better]
+        }));
+        break;
+      }
+    }
+  }
+}
+
 function checkChoice(choice, tag) {
   const effects = api.derivedChoiceEffects(choice);
   const values = [
     effects.gpa || 0,
     effects.thinking || 0,
     effects.practice || 0,
-    effects.relations || 0,
     choice.ethics || 0,
-    choice.correct ? 0.05 : 0
+    choice.correct ? 0.05 : 0,
+    choice.risk ? -1 : 0,
+    choice.harm ? -1 : 0
   ];
   checked += 1;
+  if (!effects.thinking && !effects.practice) {
+    failures.push(tag + " does not affect clinical thinking or professional skill: " + JSON.stringify({ text: choice.text, effects }));
+  }
   if (!values.some((value) => value > 0) || !values.some((value) => value < 0)) {
     failures.push(tag + " lacks a real gain/cost tradeoff: " + JSON.stringify({ text: choice.text, effects, ethics: choice.ethics || 0 }));
   }
@@ -76,11 +114,13 @@ function checkChoice(choice, tag) {
 
 for (const dept of departments) {
   for (const [caseIndex, currentCase] of dept.cases.entries()) {
+    checkDominance(currentCase.choices || [], `${dept.id} case ${caseIndex + 1} decision`);
     for (const [choiceIndex, choice] of (currentCase.choices || []).entries()) {
       checkChoice(choice, `${dept.id} case ${caseIndex + 1} decision ${choiceIndex + 1}`);
     }
     const nodes = currentCase.dialogue && currentCase.dialogue.nodes;
     for (const [nodeId, node] of Object.entries(nodes || {})) {
+      checkDominance(node.choices || [], `${dept.id} case ${caseIndex + 1} ${nodeId}`);
       for (const [choiceIndex, choice] of (node.choices || []).entries()) {
         checkChoice(choice, `${dept.id} case ${caseIndex + 1} ${nodeId} choice ${choiceIndex + 1}`);
       }
@@ -93,13 +133,23 @@ const principled = api.derivedChoiceEffects({
   effects: { gpa: 0.1, thinking: 5, practice: 3 },
   ethics: 3
 });
-if (!(principled.relations > 0) || ![principled.gpa, principled.thinking, principled.practice].some((value) => value < 0)) {
-  failures.push("A relatively correct, relationship-aware choice should gain relations while paying another cost");
+if (principled.thinking <= 5 || principled.practice >= 0) {
+  failures.push("Respect and communication should improve judgment, not professional skill");
+}
+
+const handsOn = api.derivedChoiceEffects({
+  text: "建立静脉通路并完成加压包扎",
+  effects: { thinking: 1, practice: 4 },
+  ethics: 1,
+  risk: { chance: 0.2 }
+});
+if (handsOn.practice !== 4) {
+  failures.push("Hands-on clinical action should retain professional skill gains");
 }
 
 const accommodating = api.derivedChoiceEffects({ text: "先顺着家属把场面稳住", ethics: -2 });
-if (!(accommodating.relations > 0) || accommodating.thinking !== undefined) {
-  failures.push("An ethically questionable accommodating choice should gain relations without inventing a clinical effect");
+if (!accommodating.thinking || !accommodating.practice) {
+  failures.push("Dialogue choices must affect professional metrics instead of changing ethics alone");
 }
 
 if (failures.length) {
@@ -108,4 +158,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log("OK: " + checked + " choices all contain at least one gain and one cost, including relations");
+console.log("OK: " + checked + " choices all contain a tradeoff and affect clinical thinking or professional skill");
