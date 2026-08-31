@@ -1,7 +1,7 @@
 /* 庸医觉醒系统 · 核心逻辑 + 叙事层 + 多结局（单机 / 静态 / 无后端 / localStorage 存档）
  * 设计：大四不学无术的医学生，意外接入"庸医觉醒系统"，在脑海中进行多科室轮转。
  * 每科室轮转进度达 50% 与 100% 时，可三选一抽取该科室一项核心技能。
- * 指标：绩点(GPA /4.0) · 临床思维(/thinking /100) · 实践技能(/practice /100)
+ * 指标：绩点(GPA /4.0) · 临床思维(/thinking /100) · 专业技能(/practice /100) · 人情世故(relations /100)
  * 隐藏计分：医德(ethics) · 伤患(harmCount) —— 驱动多结局分支。
  * 病例均改编自真实公开事件，已做虚构化处理，不构成任何医疗建议。
  */
@@ -9,6 +9,7 @@
   "use strict";
 
   var SAVE_KEY = "yongyi_save_v1";
+  var MAP_COLLAPSE_KEY = "yongyi_ui_rotation_map_collapsed";
 
   /* ---- 成长常量 ----
      EXP（经验值）：病历推进（完成一例接诊）时增加，驱动等级 LV，与绩点 GPA 分离。
@@ -98,7 +99,7 @@
             { text: "核对生前预嘱，与家属坦诚沟通后缓和治疗", effects: { gpa: 0.1, thinking: 6, practice: 3 }, ethics: 5,
               outcome: "你把字据摊开，陪家属坐到天黑。他走得安静。临床思维+6。" },
             { text: "顺着家属，上呼吸机积极到底", effects: { gpa: 0, thinking: -3, practice: 1 }, ethics: -4, risk: { chance: 0.3, failEffects: { thinking: -4, practice: -3 }, failText: "他清醒过一小会儿，盯着管子，眼里是恨。家属后来也悔了。" },
-              outcome: "你守了流程，却违背了本人意愿。实践+1。" },
+              outcome: "你守了流程，却违背了本人意愿。专业技能+1。" },
             { text: "躲出去让护士扛", effects: { gpa: 0.05, thinking: -4, practice: -2 }, ethics: -3,
               outcome: "把最难的决定推给别人，这课你没上。思维-4。" }
           ]
@@ -130,9 +131,9 @@
             { text: "用他的生活讲风险，一起定方案", effects: { gpa: 0.1, thinking: 5, practice: 3 }, ethics: 3,
               outcome: "你拿粉笔在处方背面画了根血管。他收下了。临床思维+5。" },
             { text: "背课本机制让他自己悟", effects: { gpa: 0.15, thinking: 2, practice: -1 }, ethics: 0,
-              outcome: "一顿术语输出，他更迷糊了。绩点+0.15，实践-1。" },
+              outcome: "一顿术语输出，他更迷糊了。绩点+0.15，专业技能-1。" },
             { text: "直接开最强降压药压住", effects: { gpa: -0.05, thinking: 1, practice: 4 }, ethics: -2, risk: { chance: 0.3, failEffects: { thinking: -4, practice: -3 }, failText: "没评估基线就上猛药，他低血压晕了一阵，你手心冒汗。" },
-              outcome: "血压很快下来，但他有点发飘。实践+4。" }
+              outcome: "血压很快下来，但他有点发飘。专业技能+4。" }
           ]
         },
         {
@@ -146,15 +147,15 @@
             { text: "补全病史+炎性指标鉴别再定", effects: { gpa: 0.05, thinking: 6, practice: 2 }, ethics: 3,
               outcome: "你把'像什么'拆成'不像什么'，思路清晰。思维+6。" },
             { text: "凭感觉先吊三天抗生素", effects: { gpa: 0, thinking: 1, practice: 3 }, ethics: -1, risk: { chance: 0.35, failEffects: { thinking: -3, gpa: -0.1 }, failText: "覆盖错了病原菌，咳嗽没好还添了腹泻，他骂你乱开。" },
-              outcome: "广覆盖未必对症，但你动手了。实践+3。" },
+              outcome: "广覆盖未必对症，但你动手了。专业技能+3。" },
             { text: "让他多喝热水观察", effects: { gpa: 0.1, thinking: -1, practice: -2 }, ethics: -2,
-              outcome: "省事，但漏诊风险留给了下次。绩点+0.1，实践-2。" }
+              outcome: "省事，但漏诊风险留给了下次。绩点+0.1，专业技能-2。" }
           ]
         }
       ],
       skills: [
         { id: "int_ddx", name: "鉴别诊断树", rarity: "核心", effect: { thinking: 6 }, desc: "面对模糊主诉，自动在脑内展开'不像什么'的排除分支，临床思维+6。" },
-        { id: "int_hx", name: "病史采集术", rarity: "核心", effect: { practice: 5 }, desc: "多问一句关键既往史，少走三公里弯路。实践技能+5。" },
+        { id: "int_hx", name: "病史采集术", rarity: "核心", effect: { practice: 5 }, desc: "多问一句关键既往史，少走三公里弯路。专业技能+5。" },
         { id: "int_rx", name: "用药安全网", rarity: "进阶", riskReduce: 0.15, effect: { thinking: 2, practice: 2 }, desc: "开药前自动核对禁忌与相互作用，后续激进处置风险-15%。" }
       ]
     },
@@ -174,7 +175,7 @@
             { text: "坚持只处理明确病灶，拒做无指征操作", effects: { gpa: 0.1, thinking: 6, practice: 4 }, ethics: 6,
               outcome: "你顶住了上级的眼神，只切了该切的。临床思维+6。" },
             { text: "按上级意思都做了", effects: { gpa: 0, thinking: -5, practice: 2 }, ethics: -6, harm: true, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4 }, failText: "埋了泵、切了胆。一年后他九级伤残找上门，你才懂什么叫'客单价'。" },
-              outcome: "流程走完了，良心和法理都悬了。实践+2。" },
+              outcome: "流程走完了，良心和法理都悬了。专业技能+2。" },
             { text: "装没听见，拖着不上台", effects: { gpa: -0.1, thinking: -3, practice: -2 }, ethics: -3,
               outcome: "你没参与，也没拦住。逃避也是种选择，最便宜也最脏。思维-3。" }
           ]
@@ -188,9 +189,9 @@
           system: "提示：最经典的病，也最容易被'想当然'害死。",
           choices: [
             { text: "禁食+术前评估待手术", effects: { gpa: 0.1, thinking: 4, practice: 4 }, ethics: 3,
-              outcome: "流程走标准，带教点头。思维+4，实践+4。" },
+              outcome: "流程走标准，带教点头。思维+4，专业技能+4。" },
             { text: "先输点液观察再说", effects: { gpa: 0, thinking: 2, practice: 2 }, ethics: 0, risk: { chance: 0.3, failEffects: { thinking: -3, practice: -3 }, failText: "穿孔了，急诊台上你手有点抖。" },
-              outcome: "保守有指征，但你赌对了。实践+2。" },
+              outcome: "保守有指征，但你赌对了。专业技能+2。" },
             { text: "当场嘴里说'肯定是阑尾'", effects: { gpa: 0.05, thinking: -2, practice: 0 }, ethics: -2,
               outcome: "结论下太早，被上级反问住。思维-2。" }
           ]
@@ -208,7 +209,7 @@
             { text: "让他回去用皮带勒住", effects: { gpa: 0, thinking: -2, practice: -1 }, ethics: -3, harm: true,
               outcome: "民间偏方害人，嵌顿风险没交代。思维-2。" },
             { text: "直接推回去了事", effects: { gpa: -0.05, thinking: 1, practice: 3 }, ethics: -1, risk: { chance: 0.3, failEffects: { thinking: -3, practice: -3 }, failText: "没排除嵌顿就硬推，老人疼得冒汗，你也不敢了。" },
-              outcome: "手法还行，但前提没查。实践+3。" }
+              outcome: "手法还行，但前提没查。专业技能+3。" }
           ]
         },
         {
@@ -220,16 +221,16 @@
           system: "提示：你犹豫的那三秒，是他的几百毫升血。",
           choices: [
             { text: "加压包扎+呼叫抢救团队", effects: { gpa: 0.05, thinking: 4, practice: 6 }, ethics: 4,
-              outcome: "先控出血再谈别的，教科书级。实践+6。" },
+              outcome: "先控出血再谈别的，教科书级。专业技能+6。" },
             { text: "先找血管缝两针", effects: { gpa: 0, thinking: 2, practice: 4 }, ethics: -1, risk: { chance: 0.35, failEffects: { thinking: -4, practice: -4 }, failText: "没控住就缝，血糊视线差点误伤。" },
-              outcome: "敢动手，但顺序错了。实践+4。" },
+              outcome: "敢动手，但顺序错了。专业技能+4。" },
             { text: "愣住三秒再反应", effects: { gpa: -0.1, thinking: -3, practice: -2 }, ethics: -4, harm: true,
               outcome: "慌了。缓过神来已多流了一百毫升。思维-3。" }
           ]
         }
       ],
       skills: [
-        { id: "surg_aseptic", name: "无菌手感", rarity: "核心", effect: { practice: 6 }, desc: "刷手铺巾像肌肉记忆，台上有底气。实践技能+6。" },
+        { id: "surg_aseptic", name: "无菌手感", rarity: "核心", effect: { practice: 6 }, desc: "刷手铺巾像肌肉记忆，台上有底气。专业技能+6。" },
         { id: "surg_anat", name: "解剖定位感", rarity: "核心", effect: { thinking: 5 }, desc: "闭眼能想清层次，下刀前有地图。临床思维+5。" },
         { id: "surg_hemostasis", name: "急诊止血术", rarity: "进阶", riskReduce: 0.15, effect: { practice: 3, thinking: 2 }, desc: "大出血局面先控源头，后续创伤处置风险-15%。" }
       ]
@@ -248,7 +249,7 @@
           system: "提示：制度兜底前，先有你肯担。绿色通道开着，是因为有人先按了开始。",
           choices: [
             { text: "启动绿色通道，先救再补手续", effects: { gpa: 0.1, thinking: 5, practice: 5 }, ethics: 6,
-              outcome: "你一个电话摇来总值班，CT 和手术都没耽误。实践+5。" },
+              outcome: "你一个电话摇来总值班，CT 和手术都没耽误。专业技能+5。" },
             { text: "等家属来、等缴费再动", effects: { gpa: 0, thinking: -5, practice: -3 }, ethics: -6, harm: true, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4 }, failText: "你等的时候，他脑疝了。后来家属来了，第一句话是跪着谢你——可人已经瘫了。" },
               outcome: "你把流程摆在了命前面。思维-5。" },
             { text: "只做最低限度处理", effects: { gpa: 0.05, thinking: -2, practice: -1 }, ethics: -2,
@@ -280,9 +281,9 @@
           system: "提示：拍背不是万能的。异物在气道，拍下去可能更深。",
           choices: [
             { text: "侧卧+清理气道+给氧", effects: { gpa: 0.05, thinking: 4, practice: 6 }, ethics: 3,
-              outcome: "先保命通道，血氧爬回来。实践+6。" },
+              outcome: "先保命通道，血氧爬回来。专业技能+6。" },
             { text: "拍背让他咳", effects: { gpa: 0, thinking: 1, practice: 2 }, ethics: -1, risk: { chance: 0.3, failEffects: { thinking: -3, practice: -3 }, failText: "拍背把异物推更深，血氧又掉。" },
-              outcome: "本能反应，但方向未必对。实践+2。" },
+              outcome: "本能反应，但方向未必对。专业技能+2。" },
             { text: "等他自己醒", effects: { gpa: 0.05, thinking: -4, practice: -2 }, ethics: -4, harm: true,
               outcome: "侥幸心理最贵。思维-4。" }
           ]
@@ -296,9 +297,9 @@
           system: "提示：triage 的残酷在于——你救得了一个，就得先放过另一个能等的。",
           choices: [
             { text: "ABCDE 序贯评估，按危重顺序分工", effects: { gpa: 0.1, thinking: 6, practice: 5 }, ethics: 4,
-              outcome: "先气道后出血，团队各就各位。思维+6，实践+5。" },
+              outcome: "先气道后出血，团队各就各位。思维+6，专业技能+5。" },
             { text: "揪着最显眼的伤口缝", effects: { gpa: 0, thinking: 1, practice: 3 }, ethics: -1, risk: { chance: 0.35, failEffects: { thinking: -4, practice: -4 }, failText: "忽略了隐匿失血，血压先垮了。" },
-              outcome: "看见血就上，丢了全局。实践+3。" },
+              outcome: "看见血就上，丢了全局。专业技能+3。" },
             { text: "站边上喊'快快快'", effects: { gpa: -0.05, thinking: -3, practice: -2 }, ethics: -3, harm: true,
               outcome: "只剩嗓门，没用。思维-3。" }
           ]
@@ -306,7 +307,7 @@
       ],
       skills: [
         { id: "er_triage", name: "分诊直觉", rarity: "核心", effect: { thinking: 6 }, desc: "一眼把'马上要死'和'还能等'分开。临床思维+6。" },
-        { id: "er_airway", name: "气道管理", rarity: "核心", effect: { practice: 5 }, desc: "任何场面先保通道，底气来自练过。实践技能+5。" },
+        { id: "er_airway", name: "气道管理", rarity: "核心", effect: { practice: 5 }, desc: "任何场面先保通道，底气来自练过。专业技能+5。" },
         { id: "er_steady", name: "抗压稳态", rarity: "进阶", riskReduce: 0.15, effect: { thinking: 3, practice: 2 }, desc: "混乱中手不抖，后续高风险处置风险-15%。" }
       ]
     },
@@ -344,7 +345,7 @@
             { text: "尊重家属签字，不手术", effects: { gpa: 0.05, thinking: -4, practice: -2 }, ethics: -2, harm: true, risk: { chance: 0.35, failEffects: { thinking: -5, gpa: -0.2 }, failText: "胎心先停了。你看着监护仪，第一次恨'流程'这两个字。" },
               outcome: "你守了规则，也接住了后果。思维-4。" },
             { text: "瞒着家属直接剖", effects: { gpa: -0.1, thinking: 1, practice: 3 }, ethics: -3, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4, gpa: -0.2 }, failText: "你救了孩子，却被家属以'侵犯选择权'告上法庭，科里开会点了你的名。" },
-              outcome: "你赌了命，也赌了前途。实践+3。" }
+              outcome: "你赌了命，也赌了前途。专业技能+3。" }
           ]
         },
         {
@@ -382,7 +383,7 @@
       ],
       skills: [
         { id: "ob_alert", name: "孕产警觉", rarity: "核心", effect: { thinking: 6 }, desc: "对妊娠相关红旗零迟钝。临床思维+6。" },
-        { id: "ob_empathy", name: "沟通共情", rarity: "核心", effect: { practice: 5 }, desc: "把尴尬的检查讲成被照顾。实践技能+5。" },
+        { id: "ob_empathy", name: "沟通共情", rarity: "核心", effect: { practice: 5 }, desc: "把尴尬的检查讲成被照顾。专业技能+5。" },
         { id: "ob_aseptic", name: "无菌操作", rarity: "进阶", riskReduce: 0.15, effect: { practice: 3, thinking: 2 }, desc: "有创操作零感染，后续操作风险-15%。" }
       ]
     },
@@ -418,7 +419,7 @@
             { text: "趋势+必要血象分层", effects: { gpa: 0.05, thinking: 5, practice: 3 }, ethics: 3,
               outcome: "小婴儿不按常理，你分层处理了。思维+5。" },
             { text: "一律抗生素压上", effects: { gpa: 0, thinking: -2, practice: 2 }, ethics: -1, risk: { chance: 0.3, failEffects: { thinking: -3, gpa: -0.1 }, failText: "病毒性的也挨了药，菌群乱了。" },
-              outcome: "覆盖心态，代价是滥用。实践+2。" },
+              outcome: "覆盖心态，代价是滥用。专业技能+2。" },
             { text: "让家长物理降温就行", effects: { gpa: 0.05, thinking: -3, practice: -1 }, ethics: -3,
               outcome: "小看婴儿发热，隐患留着。思维-3。" }
           ]
@@ -434,7 +435,7 @@
             { text: "评估脱水分级+口服补液", effects: { gpa: 0.1, thinking: 5, practice: 4 }, ethics: 3,
               outcome: "轻中度的口服就够，家长学会方法。思维+5。" },
             { text: "直接挂水图快", effects: { gpa: 0, thinking: 1, practice: 3 }, ethics: 0,
-              outcome: "快但未必必要，扎针孩子哭惨。实践+3。" },
+              outcome: "快但未必必要，扎针孩子哭惨。专业技能+3。" },
             { text: "禁食止泻等好", effects: { gpa: 0.05, thinking: -3, practice: -1 }, ethics: -3,
               outcome: "止泻不补水，脱水更重。思维-3。" }
           ]
@@ -457,9 +458,9 @@
         }
       ],
       skills: [
-        { id: "ped_dose", name: "用药折算", rarity: "核心", effect: { practice: 6 }, desc: "按体重算量像呼吸一样自然，不慌。实践技能+6。" },
+        { id: "ped_dose", name: "用药折算", rarity: "核心", effect: { practice: 6 }, desc: "按体重算量像呼吸一样自然，不慌。专业技能+6。" },
         { id: "ped_curve", name: "生长曲线判读", rarity: "核心", effect: { thinking: 5 }, desc: "一张图看穿趋势异常。临床思维+5。" },
-        { id: "ped_fun", name: "童趣沟通", rarity: "进阶", effect: { practice: 4 }, desc: "让孩子不哭、家长听懂。实践技能+4。" }
+        { id: "ped_fun", name: "童趣沟通", rarity: "进阶", effect: { practice: 4 }, desc: "让孩子不哭、家长听懂。专业技能+4。" }
       ]
     },
 
@@ -480,7 +481,7 @@
             { text: "顺着他含糊带过", effects: { gpa: 0.05, thinking: -3, practice: -1 }, ethics: -3,
               outcome: "你躲了，他也继续躲。思维-3。" },
             { text: "开点'壮阳药'打发", effects: { gpa: 0, thinking: -2, practice: 1 }, ethics: -2, risk: { chance: 0.3, failEffects: { thinking: -3, gpa: -0.1 }, failText: "没查因就壮阳，成分不明的药伤了心血管。" }, harm: true,
-              outcome: "对症不对因。实践+1。" }
+              outcome: "对症不对因。专业技能+1。" }
           ]
         },
         {
@@ -528,14 +529,14 @@
             { text: "说'多喝水就好'", effects: { gpa: 0.05, thinking: -3, practice: -1 }, ethics: -3,
               outcome: "把信号当小事，遗漏风险。思维-3。" },
             { text: "先开点消炎药", effects: { gpa: 0, thinking: -2, practice: 1 }, ethics: -1, risk: { chance: 0.3, failEffects: { thinking: -3, gpa: -0.1 }, failText: "没定位就抗感染，真因被盖住。" },
-              outcome: "对症不对因。实践+1。" }
+              outcome: "对症不对因。专业技能+1。" }
           ]
         }
       ],
       skills: [
         { id: "uro_locate", name: "泌尿系统定位", rarity: "核心", effect: { thinking: 6 }, desc: "上尿路下尿路一张图分清。临床思维+6。" },
-        { id: "uro_scope", name: "腔镜手感", rarity: "核心", effect: { practice: 6 }, desc: "镜下操作稳准，台下练出来的。实践技能+6。" },
-        { id: "uro_talk", name: "男科沟通", rarity: "进阶", effect: { practice: 4 }, desc: "把最难开口的话题聊成就诊。实践技能+4。" }
+        { id: "uro_scope", name: "腔镜手感", rarity: "核心", effect: { practice: 6 }, desc: "镜下操作稳准，台下练出来的。专业技能+6。" },
+        { id: "uro_talk", name: "男科沟通", rarity: "进阶", effect: { practice: 4 }, desc: "把最难开口的话题聊成就诊。专业技能+4。" }
       ]
     }
   ];
@@ -567,7 +568,7 @@
   }
 
   /* ---------------- 结局判定 ---------------- */
-  // 入参：state.metrics(gpa/thinking/practice) · state.ethics · state.harmCount · 已习得技能数
+  // 入参：state.metrics(gpa/thinking/practice) · state.relations · state.ethics · state.harmCount · 已习得技能数
   function determineEnding() {
     var m = state.metrics;
     var et = state.ethics;
@@ -602,6 +603,7 @@
       active: DEPARTMENTS[0].id,
       owned: [],
       riskReduce: 0,
+      relations: 0,
       ethics: 0,
       harmCount: 0,
       log: [],
@@ -624,6 +626,7 @@
       if (!s.owned) s.owned = [];
       if (!s.log) s.log = [];
       if (typeof s.riskReduce !== "number") s.riskReduce = 0;
+      if (typeof s.relations !== "number") s.relations = 0;
       if (typeof s.ethics !== "number") s.ethics = 0;
       if (typeof s.harmCount !== "number") s.harmCount = 0;
       if (typeof s.graduated !== "boolean") s.graduated = false;
@@ -637,6 +640,19 @@
 
   function save() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function setRotationMapCollapsed(collapsed, persist) {
+    var panel = $("department-panel");
+    var button = $("map-toggle");
+    if (!panel || !button) return;
+    panel.classList.toggle("is-collapsed", collapsed);
+    button.setAttribute("aria-expanded", String(!collapsed));
+    button.setAttribute("aria-label", collapsed ? "展开科室轮转地图" : "收起科室轮转地图");
+    button.setAttribute("title", collapsed ? "展开科室轮转地图" : "收起科室轮转地图");
+    if (persist) {
+      try { localStorage.setItem(MAP_COLLAPSE_KEY, collapsed ? "1" : "0"); } catch (e) {}
+    }
   }
 
   /* ---------------- 工具 ---------------- */
@@ -671,7 +687,8 @@
     var parts = [];
     if (eff.gpa) parts.push("绩点" + (eff.gpa > 0 ? "+" : "") + eff.gpa.toFixed(2).replace(/0$/, ""));
     if (eff.thinking) parts.push("思维" + (eff.thinking > 0 ? "+" : "") + eff.thinking);
-    if (eff.practice) parts.push("实践" + (eff.practice > 0 ? "+" : "") + eff.practice);
+    if (eff.practice) parts.push("专业技能" + (eff.practice > 0 ? "+" : "") + eff.practice);
+    if (eff.relations) parts.push("人情世故" + (eff.relations > 0 ? "+" : "") + eff.relations);
     return parts.join(" · ");
   }
 
@@ -684,7 +701,8 @@
     }
     if (eff.gpa) parts.push(mk("绩点", parseFloat(eff.gpa.toFixed(2))));
     if (eff.thinking) parts.push(mk("思维", eff.thinking));
-    if (eff.practice) parts.push(mk("实践", eff.practice));
+    if (eff.practice) parts.push(mk("专业技能", eff.practice));
+    if (eff.relations) parts.push(mk("人情世故", eff.relations));
     if (correct) parts.push('<span class="up">✓答对 · 绩点+' + CORRECT_GPA.toFixed(2) + '</span>');
     if (ethics) parts.push(mk("医德", ethics));
     if (risk) parts.push('<span style="color:var(--accent)">⚠风险</span>');
@@ -738,11 +756,16 @@
     setBar("gpa-bar", m.gpa / 4 * 100);
     setText("hud-gpa-val", m.gpa.toFixed(2) + " / 4.0");
 
-    // 能力条：临床思维 / 实践技能
+    // 能力条：临床思维 / 专业技能
     setBar("thinking-bar", m.thinking);
     setText("thinking-value", Math.round(m.thinking));
     setBar("practice-bar", m.practice);
     setText("practice-value", Math.round(m.practice));
+
+    // 人情世故：关系协调与组织生存能力，独立于医德和觉醒分。
+    var relationsPct = clamp(50 + state.relations / 4, 0, 100);
+    setBar("relations-bar", relationsPct);
+    setText("relations-value", Math.round(relationsPct));
 
     // 医德条：累计医德归一到 0-100（50 为中性）
     var ethicPct = clamp(50 + state.ethics, 0, 100);
@@ -758,6 +781,7 @@
     var lv = 1 + Math.floor(state.exp / EXP_PER_LEVEL);
     setText("hud-lv", lv);
     setText("hud-own", state.owned.length);
+    setText("relations-val", (state.relations > 0 ? "+" : "") + Math.round(state.relations));
     setText("ethic-val", (state.ethics > 0 ? "+" : "") + state.ethics);
     setText("harm-val", state.harmCount);
     setText("harm-foot-val", state.harmCount);
@@ -773,7 +797,7 @@
   function setText(id, t) { var el = $(id); if (el) el.textContent = t; }
 
   /* ---------------- 复合觉醒分（平衡模拟器 balance_sim.js 同源公式） ----------------
-     设计主轴：医德权重最高（0.46），临床思维/实践技能各 0.22，绩点 0.10，每名伤患 -2。
+     设计主轴：医德权重最高（0.46），临床思维/专业技能各 0.22，绩点 0.10，每名伤患 -2。
      详见 balance/report.md */
   function computeScore(s) {
     var m = s.metrics;
@@ -884,11 +908,12 @@
     /* 确定性打乱：同一病例每次顺序一致，但打破"A=好/B=差"规律 */
     var shuffled = seededShuffle(c.choices, d.id + "_c" + c.index);
     shuffled.forEach(function (ch, i) {
-      var eff = effectText(ch.effects);
+      var visibleEffects = derivedChoiceEffects(ch);
+      var eff = effectText(visibleEffects);
       if (ch.risk) eff += " ⚠风险";
       if (ch.harm) eff += " ✖伤患";
       /* 预构建带颜色的 HTML 版，点击时直接注入 */
-      var effHtml = effectHtml(ch.effects || {}, ch.ethics || 0, ch.risk, ch.harm, ch.correct);
+      var effHtml = effectHtml(visibleEffects, ch.ethics || 0, ch.risk, ch.harm, ch.correct);
       var btn = document.createElement("button");
       btn.className = "choice-button";
       btn.type = "button";
@@ -1090,24 +1115,59 @@
     toast("所有科室均已轮转完成");
   }
 
+  function inferRelationsEffect(ch) {
+    if (typeof ch.relations === "number") return ch.relations;
+    var text = ch.text || "";
+    var collaborative = /一起|共同|商量|沟通|解释|说明|共情|安抚|陪|倾听|听他|听她|平视|握.{0,2}手|稳住|协调/;
+    var abrasive = /冷笑|讽刺|反问|训|压他|压她|只搬法条|报警|叫保安|强制|不沟通|当场揭|直接拒绝/;
+    var accommodating = /顺着|配合|按上级|听家属|等家属|含糊|点头|默默|先等等|观察再说/;
+    var avoidant = /打发|拖着|装没|假装|不接话|愣着|躲|退到门边|不管|走开/;
+    if (abrasive.test(text)) return -2;
+    if (collaborative.test(text)) return 2;
+    if (accommodating.test(text)) return 2;
+    if (avoidant.test(text)) return -1;
+    return 0;
+  }
+
+  function derivedChoiceEffects(ch) {
+    var effects = {};
+    var source = ch.effects || {};
+    if (source.gpa) effects.gpa = source.gpa;
+    if (source.thinking) effects.thinking = source.thinking;
+    if (source.practice) effects.practice = source.practice;
+
+    var ethics = ch.ethics || 0;
+    if (!ch.effects) {
+      // 普通对话不再按医德推导临床能力；只有病例显式 effects / correct 才代表医学判断。
+      if (ethics === 0) effects.practice = 1;
+    }
+
+    effects.relations = inferRelationsEffect(ch);
+
+    var values = [effects.gpa || 0, effects.thinking || 0, effects.practice || 0, effects.relations || 0, ethics, ch.correct ? CORRECT_GPA : 0];
+    var hasGain = values.some(function (value) { return value > 0; });
+    var hasCost = values.some(function (value) { return value < 0; });
+
+    // 全负选项补“短期好办事”的关系收益；全正选项补时间/考试机会成本或关系摩擦。
+    if (!hasGain) {
+      if (effects.relations < 0) effects.practice = 1;
+      else effects.relations = Math.max(1, effects.relations || 0);
+    }
+    if (!hasCost) {
+      if (effects.relations > 0 && ch.effects) effects.gpa = -0.05;
+      else if (effects.relations > 0) effects.practice = -0.25;
+      else effects.relations = -1;
+    }
+    return effects;
+  }
+
   function applyChoiceEffects(ch) {
     var m = state.metrics;
-    if (ch.effects) {
-      if (ch.effects.gpa) m.gpa += ch.effects.gpa;
-      if (ch.effects.thinking) m.thinking += ch.effects.thinking;
-      if (ch.effects.practice) m.practice += ch.effects.practice;
-    } else if (ch.ethics) {
-      // 中间对话节点（depts/*.js）只带 ethics、没有 effects：按伦理值推导三核心指标
-      // 高医德 → 临床思维 + 实践技能同步增长；低医德 → 同步下滑
-      var e = ch.ethics;
-      if (e >= 3)       { m.thinking += 4; m.practice += 3; m.gpa += 0.10; }
-      else if (e === 2) { m.thinking += 3; m.practice += 2; m.gpa += 0.05; }
-      else if (e === 1) { m.thinking += 1; m.practice += 1; }
-      else if (e === 0) { /* 旁观，不动 */ }
-      else if (e === -1){ m.thinking += -1;m.practice += -1; }
-      else if (e === -2){ m.thinking += -3;m.practice += -2; m.gpa += -0.05; }
-      else              { m.thinking += -4;m.practice += -3; m.gpa += -0.10; }
-    }
+    var effects = derivedChoiceEffects(ch);
+    if (effects.gpa) m.gpa += effects.gpa;
+    if (effects.thinking) m.thinking += effects.thinking;
+    if (effects.practice) m.practice += effects.practice;
+    if (effects.relations) state.relations += effects.relations;
     if (ch.ethics) state.ethics += ch.ethics;
     if (ch.harm) state.harmCount += 1;
     // 专业知识答对（correct:true）→ 绩点加成：与医德/三核心推导解耦，单独奖励专业判断力。
@@ -1268,11 +1328,12 @@
       var dlgSeed = (dlg.d ? dlg.d.id : "") + "_c" + (dlg.c ? dlg.c.index : "") + "_n" + (node.id || "") + "_r" + (dlg.round || 0);
       var shuffled = seededShuffle(node.choices, dlgSeed);
       shuffled.forEach(function (ch, i) {
-        var eff = ch.effects ? effectText(ch.effects) : "";
+        var visibleEffects = derivedChoiceEffects(ch);
+        var eff = effectText(visibleEffects);
         if (ch.ethics) eff += (eff ? " · " : "") + "医德" + (ch.ethics > 0 ? "+" : "") + ch.ethics;
         if (ch.risk) eff += " ⚠风险";
         if (ch.harm) eff += " ✖伤患";
-        var effHtml = effectHtml(ch.effects || {}, ch.ethics || 0, ch.risk, ch.harm, ch.correct);
+        var effHtml = effectHtml(visibleEffects, ch.ethics || 0, ch.risk, ch.harm, ch.correct);
         var btn = document.createElement("button");
         btn.className = "choice-button";
         btn.type = "button";
@@ -1316,14 +1377,23 @@
   }
 
   function onDlgChoice(ch) {
+    var node = dlg.c.dialogue.nodes[dlg.nodeId];
+    var isDecision = !!(ch.decision || (node && node.decision));
     dlg.round += 1;
-    if (!ch.decision) {
+    if (!isDecision) {
       applyChoiceEffects(ch);
       renderStats();
       if (ch.correct && window.GameAudio) sfx("mood_hope"); // 答对专业知识：轻快反馈
     }
     if (ch.next) { dlg.nodeId = ch.next; renderDialogue(); return; }
-    if (ch.decision) { chooseChoice(dlg.d, dlg.c, ch); dlg = null; return; }
+    if (isDecision) {
+      var decisionDept = dlg.d;
+      var decisionCase = dlg.c;
+      // 先结束旧病例对话；chooseChoice 会同步渲染并初始化下一病例的对话状态。
+      dlg = null;
+      chooseChoice(decisionDept, decisionCase, ch);
+      return;
+    }
     onDlgContinue();
   }
 
@@ -1501,6 +1571,16 @@
     // 点击患者叙事区：一键补全正在打字的文本（二次元 AVG 惯例）
     var pb = $("patient-body");
     if (pb) pb.addEventListener("click", function () { if (window.Cinematics) window.Cinematics.finishType(); });
+
+    var mapToggle = $("map-toggle");
+    if (mapToggle) {
+      var mapCollapsed = false;
+      try { mapCollapsed = localStorage.getItem(MAP_COLLAPSE_KEY) === "1"; } catch (e) {}
+      setRotationMapCollapsed(mapCollapsed, false);
+      mapToggle.addEventListener("click", function () {
+        setRotationMapCollapsed(!$("department-panel").classList.contains("is-collapsed"), true);
+      });
+    }
 
     var atBtn = $("audio-toggle");
     if (atBtn) atBtn.addEventListener("click", function () {

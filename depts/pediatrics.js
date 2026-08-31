@@ -425,7 +425,7 @@ var DEPT = {
         { text: "掐人中、塞勺子，硬扛不评估", effects: { gpa: 0, thinking: -4, practice: -2 }, ethics: -4, harm: true, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4 }, failText: "勺子硌伤牙床还误吸，更漏了脑膜炎的苗头。" },
           outcome: "你用了土方，也漏了鉴别诊断。思维-4。" },
         { text: "每次都常规腰穿+全套抗生素", effects: { gpa: 0.05, thinking: 1, practice: 2 }, ethics: -1, risk: { chance: 0.35, failEffects: { thinking: -3, practice: -3 }, failText: "孩子白挨针，家属更慌。" },
-          outcome: "你求稳，却把检查当保险箱。实践+2。" }
+          outcome: "你求稳，却把检查当保险箱。专业技能+2。" }
       ],
       dialogue: {
         start: "s0",

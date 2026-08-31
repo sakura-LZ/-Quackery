@@ -475,7 +475,7 @@ var DEPT = {
         { text: "评估渗出与培养，表浅感染开放引流加换药，不盲目广谱", effects: { gpa: 0.1, thinking: 6, practice: 4 }, ethics: 5,
           outcome: "你没一见红就全量上药，取了渗出物送培养，表浅的敞开换药，他一周好转。思维+6。" },
         { text: "立刻静脉广谱抗生素加反复清创", effects: { gpa: 0, thinking: -4, practice: 2 }, ethics: -5, harm: true, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4 }, failText: "全量广谱压下去，红是退了，可菌群紊乱腹泻、还培养出耐药株，他后来更麻烦。" },
-          outcome: "你按『见红就清』的惯性动了刀，过度治疗留下新问题。实践+2。" },
+          outcome: "你按『见红就清』的惯性动了刀，过度治疗留下新问题。专业技能+2。" },
         { text: "先取渗出送培养，窄谱经验性起步", effects: { gpa: 0.05, thinking: 3, practice: 2 }, ethics: 1,
           outcome: "你没全量广谱，先留了证据再针对性用药，稳妥。思维+3。" }
       ],

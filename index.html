@@ -82,12 +82,13 @@
         </div>
 
         <div class="hud-info">
+          <div class="hud-info-item"><span>人情世故</span><b id="relations-val">0</b></div>
           <div class="hud-info-item"><span>医德</span><b id="ethic-val">0</b></div>
           <div class="hud-info-item"><span>伤患</span><b id="harm-val">0</b></div>
           <div class="hud-info-item"><span>技能</span><b id="hud-own">0</b></div>
         </div>
 
-        <div class="hud-score" title="综合觉醒分：医德权重最高，临床思维/实践技能各占两成，每名伤患 -2">
+        <div class="hud-score" title="综合觉醒分：医德权重最高，临床思维/专业技能各占两成，每名伤患 -2">
           <span class="hud-score-label">觉醒分</span>
           <b id="awaken-score">0</b>
           <span class="hud-score-tier tier-red" id="awaken-tier">E · 庸医事故</span>
@@ -96,9 +97,9 @@
 
       <div class="content-grid">
         <aside class="left-rail">
-          <section class="panel department-panel">
-            <div class="section-header"><div><p class="section-index">01 // ROTATION MAP</p><h3>科室轮转地图</h3></div><span class="map-count" id="map-count">0 / 6</span></div>
-            <div class="department-list" id="department-list"></div>
+          <section class="panel department-panel" id="department-panel">
+            <div class="section-header"><div><p class="section-index">01 // ROTATION MAP</p><h3>科室轮转地图</h3></div><div class="map-header-actions"><span class="map-count" id="map-count">0 / 6</span><button class="map-toggle" id="map-toggle" type="button" aria-controls="department-list" aria-expanded="true" aria-label="收起科室轮转地图" title="收起科室轮转地图"><span aria-hidden="true">⌃</span></button></div></div>
+            <div class="department-list-shell"><div class="department-list" id="department-list"></div></div>
           </section>
           <section class="panel player-panel">
             <div class="section-header"><div><p class="section-index">02 // STATUS</p><h3>临床状态</h3></div><span class="badge badge-warn">实时</span></div>
@@ -109,9 +110,14 @@
                 <b id="thinking-value">18</b>
               </div>
               <div class="status-row">
-                <span class="status-name">实践技能</span>
+                <span class="status-name">专业技能</span>
                 <div class="hud-bar prac"><i id="practice-bar"></i></div>
                 <b id="practice-value">12</b>
+              </div>
+              <div class="status-row">
+                <span class="status-name">人情世故</span>
+                <div class="hud-bar relations"><i id="relations-bar"></i></div>
+                <b id="relations-value">50</b>
               </div>
               <div class="status-row">
                 <span class="status-name">医德</span>

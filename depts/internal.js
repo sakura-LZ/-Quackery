@@ -460,7 +460,7 @@ var DEPT = {
         { text: "顺他只开中药/保健品调理", effects: { gpa: 0, thinking: -3, practice: -1 }, ethics: -4, risk: { chance: 0.35, failEffects: { thinking: -4, gpa: -0.1 }, failText: "酮症酸中毒送急诊，他媳妇骂你瞎调理，你也后怕。" },
           outcome: "你顺着他，埋了雷。思维-3。" },
         { text: "只开口服药+饮食运动，不提胰岛素", effects: { gpa: 0.05, thinking: 1, practice: 1 }, ethics: 0, risk: { chance: 0.3, failEffects: { thinking: -3, practice: -2 }, failText: "单靠口服压不住，三个月后眼底出血、肾早损，你悔青。" },
-          outcome: "稳妥但不够，症状拖着。实践+1。" }
+          outcome: "稳妥但不够，症状拖着。专业技能+1。" }
       ]
     }
   ]

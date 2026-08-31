@@ -453,7 +453,7 @@ var DEPT = {
         { text: "先停液观察，不敢用肾上腺素", effects: { gpa: 0, thinking: -4, practice: -2 }, ethics: -5, harm: true, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4 }, failText: "喉头水肿窒息，你愣神的几秒，他脸先紫了。" },
           outcome: "你把肾上腺素当最后手段，差点成了致命犹豫。思维-4。" },
         { text: "只给抗组胺/激素，不肾上腺素", effects: { gpa: 0.05, thinking: 1, practice: 2 }, ethics: -1, risk: { chance: 0.35, failEffects: { thinking: -3, practice: -3 }, failText: "辅助药压不住血管扩张，血压继续塌。" },
-          outcome: "你按『先轻后重』的惯性，可休克不陪你慢。实践+2。" }
+          outcome: "你按『先轻后重』的惯性，可休克不陪你慢。专业技能+2。" }
       ],
       dialogue: {
         start: "s0",

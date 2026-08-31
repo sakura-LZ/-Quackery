@@ -395,7 +395,7 @@ var DEPT = {
         { text: "顺她『返老还童』不查，观察", effects: { gpa: 0, thinking: -4, practice: -1 }, ethics: -4, risk: { chance: 0.4, failEffects: { thinking: -4, practice: -4 }, failText: "拖了半年确诊内膜癌已侵肌层，她悔得直拍腿。" },
           outcome: "你顺着她，埋了雷。思维-4。" },
         { text: "不活检直接全子宫切除", effects: { gpa: -0.05, thinking: 1, practice: 3 }, ethics: -2, risk: { chance: 0.35, failEffects: { thinking: -3, practice: -3 }, failText: "切了才发现只是息肉，她白丢了子宫。" },
-          outcome: "你走了流程，却跳过了诊断。实践+3。" }
+          outcome: "你走了流程，却跳过了诊断。专业技能+3。" }
       ],
       dialogue: {
         start: "s0",

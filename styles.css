@@ -206,9 +206,10 @@ a { color: var(--accent); }
 .hud-bar.vit i { background: linear-gradient(90deg, var(--success), #6fd4a8); }
 .hud-bar.think i { background: linear-gradient(90deg, var(--accent-2), #ffc999); }
 .hud-bar.prac i { background: linear-gradient(90deg, var(--amber), #ffe4a0); }
+.hud-bar.relations i { background: linear-gradient(90deg, #3fb98d, #9be7c4); }
 .hud-bar.ethics i { background: linear-gradient(90deg, #a78bfa, #c4b5fd); }
 
-.hud-info { display: flex; gap: 18px; }
+.hud-info { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
 .hud-info-item { display: grid; gap: 2px; text-align: center; }
 .hud-info-item span { font-family: var(--font-grotesk); font-size: 9px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; font-weight: 700; }
 .hud-info-item b { font-family: var(--font-display); font-size: 22px; font-weight: 900; color: var(--ink); line-height: 1; }
@@ -331,13 +332,28 @@ a { color: var(--accent); }
 .section-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: var(--gap-md); }
 .section-header h3 { margin: 4px 0 0; font-family: var(--font-display); font-size: 19px; font-weight: 900; letter-spacing: -0.01em; color: var(--ink); }
 .map-count { color: var(--muted); font-family: var(--font-grotesk); font-size: 10px; letter-spacing: 0.08em; font-weight: 700; }
+.map-header-actions { display: flex; align-items: center; gap: 8px; }
+.map-toggle {
+  display: grid; place-items: center; width: 34px; height: 34px; padding: 0;
+  border: 2px solid var(--ink); border-radius: var(--rs); background: var(--bg-surface); color: var(--ink);
+  font: 900 18px/1 var(--font-grotesk); cursor: pointer; box-shadow: 0 2px 0 var(--ink);
+  transition: transform 180ms ease-out, background-color 180ms ease-out, box-shadow 180ms ease-out;
+}
+.map-toggle:hover { background: var(--accent); transform: translateY(-1px); box-shadow: 0 3px 0 var(--ink); }
+.map-toggle:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--ink); }
+.map-toggle:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.map-toggle span { display: block; transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1); }
+.department-panel.is-collapsed .map-toggle span { transform: rotate(180deg); }
+.department-panel.is-collapsed .section-header { margin-bottom: 0; }
 
 .department-panel, .player-panel, .skill-panel, .protocol-panel, .log-panel { padding: var(--gap-lg) 22px; }
 
 /* ============================================================
    ★ 科室轮转地图（每个科室一张缩略图 + 卡片）
    ============================================================ */
-.department-list { display: grid; gap: 10px; }
+.department-list-shell { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 220ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease-out; }
+.department-list { display: grid; min-height: 0; overflow: hidden; gap: 10px; }
+.department-panel.is-collapsed .department-list-shell { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
 .department-item {
   position: relative; display: grid;
   grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center;
@@ -534,9 +550,9 @@ a { color: var(--accent); }
   box-shadow: 0 2px 0 var(--ink);
 }
 .choice-effect {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 3px 7px;
   font-family: var(--font-grotesk); font-size: 11px; color: var(--muted);
-  text-align: right; white-space: nowrap; font-weight: 700;
-  min-width: 0; overflow: visible;
+  text-align: right; font-weight: 700; min-width: 0;
 }
 .choice-effect .up { color: var(--success); }
 .choice-effect .down { color: var(--alarm); }
