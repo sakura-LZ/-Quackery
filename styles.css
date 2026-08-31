@@ -1141,6 +1141,7 @@ a { color: var(--accent); }
 /* 窄屏：字号与场景图降级 */
 @media (max-width: 720px) {
   .dlg-text { font-size: 15px; }
+  .dlg-speaker { font-size: 17px; }
   .choice-button { font-size: 17px; }
   .patient-body .scene-art { height: 180px; }
 }
