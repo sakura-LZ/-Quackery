@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a1322" />
+  <title>庸医觉醒系统 · 临床轮转模拟器</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Long+Cang&family=ZCOOL+QingKe+HuangYou&display=swap" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="cinematics.css" />
+</head>
+<body>
+  <canvas id="cin-bg"></canvas>
+  <div id="cin-grain"></div>
+  <div id="cin-intro"><div class="cin-intro-inner"></div></div>
+  <div id="cin-twist"></div>
+  <div id="cin-climax"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span></div>
+        <div>
+          <p class="eyebrow">M.E.D. // MENTAL EDUCATION DEVICE</p>
+          <h1>庸医觉醒系统</h1>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="ghost-button" id="audio-toggle" type="button" aria-pressed="true">🔊 音效</button>
+        <button class="ghost-button" id="reset-game" type="button">重置人生</button>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <div class="cin-ticker" aria-hidden="true"><div class="cin-ticker-track">
+        <span><b>内科</b> · 外科 · 急诊科 · 妇产科 · 儿科 · 泌尿外科（男科）</span>
+        <span><b>内科</b> · 外科 · 急诊科 · 妇产科 · 儿科 · 泌尿外科（男科）</span>
+      </div></div>
+      <section class="hero-panel panel panel-grid-lines">
+        <div class="hero-copy">
+          <div class="status-kicker"><span class="status-chip">SYSTEM ONLINE</span><span>第 4 学年 · 临床轮转预备期</span></div>
+          <h2>你的绩点救不了你，<em>但系统也许可以。</em></h2>
+          <p class="hero-lede">一个大四还在补考边缘徘徊的医学生，在考试周前夕意外接入了"庸医觉醒系统"。从今天开始，你可以在脑海中完成跨科室轮转，把每一次临床选择变成真正的成长。</p>
+          <div class="hero-meta">
+            <div><span class="meta-label">当前任务</span><strong id="mission-text">完成第一次脑内接诊</strong></div>
+            <div><span class="meta-label">系统版本</span><strong>AWAKENING / 0.1</strong></div>
+          </div>
+        </div>
+        <div class="hero-figure" aria-hidden="true">
+          <!-- art.js 注入场景插画 + 旁白；退化由程序化 SVG 提供 -->
+        </div>
+      </section>
+
+      <!-- ★ 二次元 HUD 状态条：贴在对话上方（移到 hero 之下、content-grid 之上） -->
+      <div class="hud-strip panel panel-glass">
+        <div class="hud-id">
+          <div class="hud-avatar" aria-hidden="true">庸</div>
+          <div class="hud-id-text">
+            <strong>林一通</strong>
+            <span>大四 · 临床医学</span>
+          </div>
+          <div class="hud-lv"><span>LV</span><b id="hud-lv">1</b></div>
+        </div>
+
+        <div class="hud-bars">
+          <div class="hud-bar-block exp">
+            <div class="hud-bar-label"><span>经验 EXP</span><span id="hud-exp-val">0</span></div>
+            <div class="hud-bar"><i id="exp-bar"></i></div>
+          </div>
+          <div class="hud-bar-block gpa">
+            <div class="hud-bar-label"><span>绩点 GPA</span><span id="hud-gpa-val">2.10 / 4.0</span></div>
+            <div class="hud-bar"><i id="gpa-bar"></i></div>
+          </div>
+          <div class="hud-bar-block vit">
+            <div class="hud-bar-label"><span>状态 VIT · 医德/精神</span><span id="hud-vit-val">100</span></div>
+            <div class="hud-bar vit"><i id="vit-bar"></i></div>
+          </div>
+        </div>
+
+        <div class="hud-info">
+          <div class="hud-info-item"><span>医德</span><b id="ethic-val">0</b></div>
+          <div class="hud-info-item"><span>伤患</span><b id="harm-val">0</b></div>
+          <div class="hud-info-item"><span>技能</span><b id="hud-own">0</b></div>
+        </div>
+
+        <div class="hud-score" title="综合觉醒分：医德权重最高，临床思维/实践技能各占两成，每名伤患 -2">
+          <span class="hud-score-label">觉醒分</span>
+          <b id="awaken-score">0</b>
+          <span class="hud-score-tier tier-red" id="awaken-tier">E · 庸医事故</span>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <aside class="left-rail">
+          <section class="panel department-panel">
+            <div class="section-header"><div><p class="section-index">01 // ROTATION MAP</p><h3>科室轮转地图</h3></div><span class="map-count" id="map-count">0 / 6</span></div>
+            <div class="department-list" id="department-list"></div>
+          </section>
+          <section class="panel player-panel">
+            <div class="section-header"><div><p class="section-index">02 // STATUS</p><h3>临床状态</h3></div><span class="badge badge-warn">实时</span></div>
+            <div class="status-bars">
+              <div class="status-row">
+                <span class="status-name">临床思维</span>
+                <div class="hud-bar think"><i id="thinking-bar"></i></div>
+                <b id="thinking-value">18</b>
+              </div>
+              <div class="status-row">
+                <span class="status-name">实践技能</span>
+                <div class="hud-bar prac"><i id="practice-bar"></i></div>
+                <b id="practice-value">12</b>
+              </div>
+              <div class="status-row">
+                <span class="status-name">医德</span>
+                <div class="hud-bar ethics"><i id="ethic-bar"></i></div>
+                <b id="ethic-value">50</b>
+              </div>
+            </div>
+            <div class="status-foot">
+              <span class="status-foot-pill status-foot-harm">伤患 <b id="harm-foot-val">0</b></span>
+            </div>
+          </section>
+        </aside>
+
+        <section class="center-stage">
+          <section class="panel patient-panel panel-grid-lines" id="patient-panel">
+            <div class="section-header patient-header"><div><p class="section-index" id="patient-index">03 // LIVE CASE · 急诊科</p><h3 id="patient-title">等待载入患者</h3></div><div class="case-status"><span class="pulse-dot"></span><span id="case-status-text">系统待机</span></div></div>
+            <div class="patient-body" id="patient-body"></div>
+            <div class="choice-list" id="choice-list"></div>
+            <div class="patient-footer"><span class="disclaimer">虚构病例 · 仅用于游戏体验，不构成医疗建议</span><span id="case-counter">CASE 01 / 02</span></div>
+          </section>
+          <section class="panel log-panel">
+            <div class="section-header"><div><p class="section-index">04 // SYSTEM LOG</p><h3>觉醒日志</h3></div><button class="text-button" id="clear-log" type="button">清除视野</button></div>
+            <div class="log-list" id="log-list"></div>
+          </section>
+        </section>
+
+        <aside class="right-rail">
+          <section class="panel skill-panel">
+            <div class="section-header"><div><p class="section-index">05 // SKILL BAG</p><h3>技能背包</h3></div><button class="text-button" id="backpack-open" type="button">展开背包</button></div>
+            <div class="inv-grid" id="skill-list"></div>
+            <div class="inv-foot"><span id="skill-count">0 项</span><span>点击槽位查看详情</span></div>
+          </section>
+          <section class="panel protocol-panel">
+            <p class="section-index">06 // SYSTEM PROTOCOL</p>
+            <div class="protocol-line"><span class="protocol-number">50%</span><span>完成半程轮转<br /><b>解锁一次核心技能抽取</b></span></div>
+            <div class="protocol-line"><span class="protocol-number">100%</span><span>完成完整轮转<br /><b>获得终极科室技能抽取</b></span></div>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="app-footer"><span>庸医觉醒系统 / INTERNAL BUILD 0.1</span><span>所有状态仅存储于当前浏览器 · 可部署为独立应用</span></footer>
+  </div>
+
+  <!-- ★ 技能背包弹窗（二次元背包 / 图鉴） -->
+  <div class="modal-backdrop" id="backpack-modal" aria-hidden="true">
+    <div class="backpack-modal panel" role="dialog" aria-modal="true" aria-labelledby="bp-title">
+      <button class="modal-close" id="backpack-close" type="button" aria-label="关闭背包">×</button>
+      <div class="modal-topline"><span class="status-chip">SKILL BACKPACK</span><span id="bp-sub">CORE ABILITY INVENTORY</span></div>
+      <h2 id="bp-title">技能背包</h2>
+      <div class="bp-tabs" id="bp-tabs">
+        <button class="bp-tab is-active" type="button" data-tab="owned">已习得 <b id="bp-owned-count">0</b></button>
+        <button class="bp-tab" type="button" data-tab="codex">图鉴 <b>18</b></button>
+      </div>
+      <div class="bp-grid" id="backpack-grid"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="skill-modal" aria-hidden="true">
+    <div class="skill-modal panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" id="close-modal" type="button" aria-label="关闭技能抽取">×</button>
+      <div class="modal-topline"><span class="status-chip">SKILL DRAW</span><span id="draw-threshold">ROTATION THRESHOLD</span></div>
+      <p class="section-index">CORE ABILITY EXTRACTION</p>
+      <h2 id="modal-title">半程觉醒：选择你的核心技能</h2>
+      <p class="modal-description" id="modal-description">你在这个科室已经不再是完全的新手。系统扫描到三种可植入的临床能力，请选择一项。</p>
+      <div class="candidate-list" id="candidate-list"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="audio.js"></script>
+  <script src="cinematics.js"></script>
+  <script src="art.js"></script>
+  <script src="depts/internal.js"></script>
+  <script src="depts/surgery.js"></script>
+  <script src="depts/emergency.js"></script>
+  <script src="depts/obgyn.js"></script>
+  <script src="depts/pediatrics.js"></script>
+  <script src="depts/urology.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

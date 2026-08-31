@@ -1,0 +1,511 @@
+/* ============================================================
+   庸医觉醒系统 · Cinematics Layer V4 — 漫画分镜版
+   视觉升级：黑边 + 暖橙 + 漫画分镜过渡（去掉 glitch/cyber）
+   保留所有 cinematics.js 调用的 .class 与 #id：
+     .cin-cursor .ring .dot .is-hover .is-down .is-hidden
+     .cin-ticker .cin-ticker-track
+     .cin-boot-readout .cin-boot-bar .cin-boot-pct
+     .cin-title .glitch .is-in
+     .cin-subtitle .cin-prologue .cin-caret .sys
+     .cin-enter .cin-skip
+     #cin-intro.is-active .is-out
+     #cin-twist .is-fire .cin-twist-core .cin-twist-word .cin-twist-line .cin-twist-tag
+     #cin-climax .is-show .ending .cin-climax-burst .cin-climax-core .cin-climax-tag .cin-climax-word .acc .cin-climax-sub
+     .candidate-button.is-deal .is-pick
+     .tilt .reveal
+   ============================================================ */
+
+/* —— 动画层专用色（与 styles.css V5 对齐：米白纸 + 暖橙主色） —— */
+:root {
+  --cin-accent: #ff7d3b;       /* 医疗暖橙，主强调 */
+  --cin-accent-2: #ffaa6b;     /* 亮橙 */
+  --cin-alarm: #e63946;        /* 医疗红 */
+  --cin-ink: #1a1a1a;          /* 墨黑字 */
+  --cin-paper: #fbf7ee;        /* 米白纸底 */
+  --cin-amber: #ffc857;        /* 琥珀 */
+  --cin-success: #3fb98d;      /* 手术绿 */
+  --cin-violet: #a78bfa;       /* 紫罗兰 */
+}
+
+/* ---- 全屏覆盖背景（开启时） ---- */
+#cin-intro, #cin-twist, #cin-climax {
+  background: var(--cin-paper);
+}
+
+/* 指针精细时隐藏系统光标 */
+@media (hover: hover) and (pointer: fine) {
+  body { cursor: none; }
+  a, button, .department-item, .choice-button, .candidate-button { cursor: none; }
+}
+
+/* ========== 神经脉冲背景画布 — 改为墨点纹理 ========== */
+#cin-bg {
+  position: fixed; inset: 0; z-index: -1;
+  width: 100%; height: 100%;
+  pointer-events: none; display: block;
+  /* 仍交给 cinematics.js 的 canvas；但视觉由 JS 配合 */
+}
+
+/* ========== 纸面噪点（替代 cyber 颗粒） ========== */
+#cin-grain {
+  position: fixed; inset: -50%; z-index: 1; pointer-events: none;
+  opacity: .08; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: cin-grain-shift 4s steps(8) infinite;
+}
+@keyframes cin-grain-shift {
+  0% { transform: translate(0, 0); }
+  12% { transform: translate(-1%, 1%); }
+  25% { transform: translate(1%, -1%); }
+  37% { transform: translate(-1.5%, 1.5%); }
+  50% { transform: translate(0.5%, 0); }
+  62% { transform: translate(-0.5%, -1%); }
+  75% { transform: translate(1%, 0.5%); }
+  87% { transform: translate(-1%, -0.5%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ========== 自定义光标（差分混合圆环 + 圆点，保留 V3 行为） ========== */
+.cin-cursor { position: fixed; top: 0; left: 0; z-index: 9999; pointer-events: none; mix-blend-mode: difference; }
+.cin-cursor .ring {
+  position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px;
+  border: 2.5px solid var(--cin-paper); border-radius: 50%;
+  transition: width .25s ease, height .25s ease, margin .25s ease, opacity .25s ease, background .25s ease;
+}
+.cin-cursor .dot {
+  position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px;
+  background: var(--cin-paper); border-radius: 50%;
+}
+.cin-cursor.is-hover .ring { width: 56px; height: 56px; margin: -28px 0 0 -28px; background: rgba(255, 200, 87, 0.2); border-color: var(--cin-amber); }
+.cin-cursor.is-down .ring { width: 24px; height: 24px; margin: -12px 0 0 -12px; }
+.cin-cursor.is-hidden { opacity: 0; }
+@media (hover: none), (pointer: coarse) { .cin-cursor { display: none; } }
+
+/* ========== 科室滚动字幕 ========== */
+.cin-ticker {
+  position: relative; margin: 0 0 var(--gap-md, 18px);
+  padding: 10px 0;
+  border-top: 2px solid var(--cin-ink); border-bottom: 2px solid var(--cin-ink);
+  overflow: hidden;
+  background: var(--cin-amber);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.cin-ticker-track {
+  display: inline-flex; gap: 0; white-space: nowrap;
+  animation: cin-ticker 26s linear infinite;
+  font-family: "Space Grotesk", monospace;
+  font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--cin-ink); font-weight: 800;
+}
+.cin-ticker-track span { padding: 0 28px; }
+.cin-ticker-track b { color: var(--cin-alarm); font-weight: 900; }
+.cin-ticker:hover .cin-ticker-track { animation-play-state: paused; }
+@keyframes cin-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ============================================================
+   一、序章 / 开场动画
+   · 章节扉页：宽黑边从两侧推进 → 巨大标题 POP 入场 → 打字机序章
+   ============================================================ */
+#cin-intro {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 30%, rgba(255, 200, 87, 0.18), transparent 70%),
+    var(--cin-paper);
+  opacity: 0; visibility: hidden;
+  transition: opacity .5s ease, visibility .5s ease;
+}
+#cin-intro.is-active { opacity: 1; visibility: visible; }
+
+.cin-intro-inner {
+  width: min(880px, 92vw); text-align: center; position: relative;
+  padding: 56px 40px;
+  background: var(--cin-paper);
+  border: 4px solid var(--cin-ink);
+  border-radius: 8px;
+  box-shadow: 0 10px 0 var(--cin-ink), 0 25px 60px rgba(23, 23, 23, 0.2);
+}
+
+.cin-boot-readout {
+  font-family: "Space Grotesk", monospace;
+  font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--cin-ink); font-weight: 800;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin-bottom: 28px;
+}
+.cin-boot-bar {
+  width: 220px; height: 6px;
+  background: var(--cin-paper); border: 2px solid var(--cin-ink);
+  border-radius: 99px; overflow: hidden;
+}
+.cin-boot-bar i {
+  display: block; height: 100%; width: 0;
+  background: var(--cin-accent);
+}
+.cin-boot-pct { color: var(--cin-alarm); min-width: 48px; text-align: left; font-weight: 900; }
+
+.cin-title {
+  font-family: "Long Cang", "Ma Shan Zheng", "Noto Serif SC", "Source Han Serif SC", serif;
+  font-weight: 400;
+  font-size: clamp(56px, 11vw, 124px); line-height: 1; letter-spacing: 0;
+  margin: 26px 0 6px; color: var(--cin-ink);
+  white-space: nowrap;
+  opacity: 0; transform: scale(0.5) rotate(-6deg);
+  text-shadow: 2px 2px 0 var(--cin-accent-2), 4px 4px 0 var(--cin-ink);
+  /* 让每个字都能独立做动作 */
+  position: relative;
+}
+.cin-title .glitch { white-space: nowrap; display: inline-block; }
+/* ★ 字符级草书变形：让六字各自高低/倾斜，气势散开 */
+.cin-title .glitch > span {
+  display: inline-block;
+  transform-origin: 50% 80%;
+}
+.cin-title .glitch > span:nth-child(1) { transform: rotate(-3deg) translateY(-4px); }
+.cin-title .glitch > span:nth-child(2) { transform: rotate(2deg) translateY(2px); font-size: 1.08em; }
+.cin-title .glitch > span:nth-child(3) { transform: rotate(-1deg) translateY(-2px); font-size: 0.96em; }
+.cin-title .glitch > span:nth-child(4) { transform: rotate(4deg) translateY(3px); font-size: 1.05em; }
+.cin-title .glitch > span:nth-child(5) { transform: rotate(-2deg) translateY(-3px); font-size: 0.98em; }
+.cin-title .glitch > span:nth-child(6) { transform: rotate(3deg) translateY(2px); font-size: 1.06em; }
+.cin-title .glitch > span:nth-child(odd) { color: var(--cin-ink); }
+.cin-title .glitch > span:nth-child(even) { color: var(--cin-ink); }
+/* 入场：从草书飞白入场 */
+.cin-title.is-in { animation: cin-title-thump 0.9s cubic-bezier(.34, 1.56, .64, 1) forwards; }
+.cin-title .glitch { position: relative; display: inline-block; }
+.cin-title .glitch::before, .cin-title .glitch::after {
+  content: attr(data-text); position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0;
+}
+.cin-title.is-in .glitch::before { color: var(--cin-accent); clip-path: inset(0 0 60% 0); animation: cin-glitch-once .8s cubic-bezier(.3,.7,.2,1) both; }
+.cin-title.is-in .glitch::after { color: var(--cin-alarm); clip-path: inset(60% 0 0 0); animation: cin-glitch-once .8s cubic-bezier(.3,.7,.2,1) .06s both reverse; }
+/* 标题右下角朱印 */
+.cin-title-wrap {
+  position: relative;
+  display: inline-block;
+  padding: 6px 50px 28px 0;
+}
+.cin-title-stamp {
+  position: absolute; right: -4px; bottom: 0;
+  width: 64px; height: 64px; border: 3px solid var(--cin-alarm); color: var(--cin-alarm);
+  font-family: "ZCOOL QingKe HuangYou", "Noto Serif SC", serif; font-size: 18px; font-weight: 900;
+  display: grid; place-items: center; text-align: center; line-height: 1.05;
+  transform: rotate(-8deg);
+  background: var(--cin-paper); box-shadow: 0 3px 0 var(--cin-alarm);
+  letter-spacing: 0;
+  opacity: 0;
+}
+.cin-title-wrap .cin-title-stamp { animation: cin-stamp-thump 0.55s cubic-bezier(.34, 1.56, .64, 1) 0.55s forwards; }
+@keyframes cin-stamp-thump {
+  0%   { opacity: 0; transform: rotate(-30deg) scale(1.6); }
+  60%  { opacity: 1; transform: rotate(-4deg) scale(0.95); }
+  100% { opacity: 1; transform: rotate(-8deg) scale(1); }
+}
+@keyframes cin-glitch-once {
+  0% { opacity: 0; transform: translate(-4px,-2px); }
+  20% { opacity: .8; }
+  60% { transform: translate(3px, 2px); }
+  100% { opacity: 0; transform: translate(0, 0); }
+}
+@keyframes cin-title-thump {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-10deg); }
+  35%  { opacity: 1; transform: scale(1.18) rotate(3deg); }
+  60%  { transform: scale(0.94) rotate(-2deg); }
+  80%  { transform: scale(1.03) rotate(1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); filter: none; }
+}
+
+.cin-subtitle {
+  font-family: "Space Grotesk", monospace; font-size: 11px; letter-spacing: .55em;
+  text-transform: uppercase; color: var(--cin-accent); opacity: 0;
+  margin-bottom: 22px; font-weight: 900;
+}
+.cin-subtitle.is-in { animation: cin-fade-up .8s ease forwards; }
+@keyframes cin-fade-up { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
+
+.cin-prologue {
+  font-family: "Noto Serif SC", serif; font-weight: 500;
+  font-size: clamp(15px, 2.1vw, 19px); line-height: 2.1; color: var(--cin-ink);
+  text-align: left; max-width: 640px; margin: 4px auto 0; min-height: 200px;
+  white-space: pre-wrap;
+}
+.cin-prologue .sys { color: var(--cin-alarm); font-weight: 700; background: rgba(230, 57, 70, 0.06); padding: 1px 4px; border-radius: 3px; }
+
+.cin-caret {
+  display: inline-block; width: 9px; height: 1.05em; vertical-align: -3px;
+  background: var(--cin-accent); margin-left: 2px;
+  animation: cin-blink 1s steps(2) infinite;
+  border: 1px solid var(--cin-ink);
+}
+@keyframes cin-blink { 50% { opacity: 0.15; } }
+
+.cin-enter {
+  margin-top: 30px; display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 34px; border: 3px solid var(--cin-ink); border-radius: 999px;
+  background: var(--cin-accent); color: var(--cin-ink);
+  font-family: "Space Grotesk", monospace; font-size: 12px; letter-spacing: .22em;
+  text-transform: uppercase; font-weight: 900;
+  box-shadow: 0 5px 0 var(--cin-ink);
+  opacity: 0; transform: translateY(14px);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.cin-enter.is-in { animation: cin-fade-up .7s ease forwards; }
+.cin-enter:hover { background: var(--cin-amber); }
+.cin-enter:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--cin-ink); }
+.cin-enter .ar { color: var(--cin-ink); font-size: 16px; font-weight: 900; }
+
+.cin-skip {
+  position: absolute; right: 18px; bottom: 18px;
+  font-family: "Space Grotesk", monospace; font-size: 9px; letter-spacing: .24em;
+  color: var(--cin-ink); background: none; border: 0;
+  text-transform: uppercase; font-weight: 800;
+  padding: 6px 10px; border-radius: 6px;
+}
+.cin-skip:hover { background: var(--cin-ink); color: var(--cin-paper); }
+
+/* 序章退场：从中间水平裂开 */
+#cin-intro.is-out::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 48%,
+      var(--cin-amber) 48%, var(--cin-amber) 52%,
+      transparent 52%, transparent 100%);
+  animation: cin-page-out .7s ease forwards;
+  pointer-events: none;
+}
+@keyframes cin-page-out {
+  from { clip-path: inset(50% 0 50% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* ============================================================
+   二、情节转折（三段漫画分镜错位合拢 + 警示红）
+   ============================================================ */
+#cin-twist {
+  position: fixed; inset: 0; z-index: 95; pointer-events: none;
+  display: grid; place-items: center; opacity: 0; visibility: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(230, 57, 70, 0.1), transparent 60%),
+    var(--cin-paper);
+}
+#cin-twist.is-fire { visibility: visible; }
+#cin-twist.is-fire .cin-twist-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    /* 三段漫画分镜错位 */
+    linear-gradient(90deg, transparent 33%, rgba(255, 200, 87, 0.3) 33%, rgba(255, 200, 87, 0.3) 34%, transparent 34%,
+                     transparent 66%, rgba(255, 200, 87, 0.3) 66%, rgba(255, 200, 87, 0.3) 67%, transparent 67%);
+  animation: cin-twist-bg 1.4s ease forwards;
+}
+@keyframes cin-twist-bg { 0%{opacity:0;} 12%{opacity:1;} 80%{opacity:1;} 100%{opacity:0;} }
+
+#cin-twist.is-fire .cin-twist-core { animation: cin-twist-core 1.5s cubic-bezier(.18,.7,.2,1) forwards; }
+
+.cin-twist-core { text-align: center; opacity: 0; }
+.cin-twist-word {
+  font-family: "Noto Serif SC", serif; font-weight: 900;
+  font-size: clamp(70px, 18vw, 192px); line-height: .9; letter-spacing: -.04em;
+  color: var(--cin-ink); position: relative;
+  background: var(--cin-paper); border: 5px solid var(--cin-ink);
+  padding: 8px 30px 14px; border-radius: 8px;
+  box-shadow: 0 8px 0 var(--cin-alarm), 0 14px 30px rgba(230, 57, 70, 0.4);
+  display: inline-block; transform: rotate(-2deg);
+}
+.cin-twist-word::before, .cin-twist-word::after {
+  content: attr(data-text); position: absolute; inset: 0;
+  background: var(--cin-paper); border-radius: 8px;
+  opacity: 0; padding: 8px 30px 14px;
+}
+.cin-twist-word::before {
+  color: var(--cin-alarm); transform: translate(-6px, 4px) rotate(-1deg);
+  border: 3px solid var(--cin-alarm);
+}
+.cin-twist-word::after {
+  color: var(--cin-amber); transform: translate(6px, -4px) rotate(1deg);
+  border: 3px solid var(--cin-amber);
+}
+@keyframes cin-twist-core {
+  0% { opacity: 0; transform: translateY(40px) rotate(-12deg) scale(0.5); }
+  18% { opacity: 1; transform: translateY(0) rotate(-2deg) scale(1.08); }
+  40% { transform: translateY(0) rotate(-2deg) scale(1); }
+  100% { opacity: 0; transform: translateY(-12px) rotate(-2deg) scale(1); }
+}
+.cin-twist-line {
+  margin: 24px auto 0;
+  font-family: "Noto Serif SC", serif; font-size: 14px; letter-spacing: .04em;
+  color: var(--cin-ink); max-width: 640px; padding: 12px 20px;
+  background: var(--cin-paper); border: 2.5px solid var(--cin-ink);
+  border-radius: 8px; line-height: 1.85;
+  box-shadow: 0 4px 0 var(--cin-alarm);
+}
+.cin-twist-tag {
+  display: inline-block; margin-top: 18px;
+  font-family: "Space Grotesk", monospace; font-size: 11px; letter-spacing: .4em;
+  color: var(--cin-paper); text-transform: uppercase;
+  padding: 6px 14px; background: var(--cin-alarm); border: 2.5px solid var(--cin-ink);
+  border-radius: 6px; font-weight: 900;
+  box-shadow: 0 3px 0 var(--cin-ink);
+  transform: rotate(2deg);
+}
+
+/* ============================================================
+   三、高潮 / 觉醒 + 结局（POP! 星爆 + 漫画标题）
+   ============================================================ */
+#cin-climax {
+  position: fixed; inset: 0; z-index: 90; pointer-events: none;
+  display: grid; place-items: center; opacity: 1; visibility: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 45%, rgba(255, 200, 87, 0.18), transparent 65%),
+    var(--cin-paper);
+}
+#cin-climax.is-show { visibility: visible; }
+#cin-climax.is-show .cin-climax-core { animation: cin-climax-core 2.6s cubic-bezier(.16,.84,.2,1) forwards; }
+@keyframes cin-climax-core {
+  0% { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+  14% { opacity: 1; transform: scale(1.15) rotate(2deg); }
+  30% { transform: scale(1) rotate(0deg); }
+  80% { opacity: 1; transform: scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.05) rotate(0deg); }
+}
+.cin-climax-core { text-align: center; opacity: 0; position: relative; }
+.cin-climax-tag {
+  font-family: "Space Grotesk", monospace; font-size: 11px; letter-spacing: .55em;
+  text-transform: uppercase; color: var(--cin-accent); margin-bottom: 14px;
+  display: inline-block; padding: 6px 16px; background: var(--cin-paper);
+  border: 2.5px solid var(--cin-ink); border-radius: 999px;
+  font-weight: 900; box-shadow: 0 3px 0 var(--cin-ink);
+}
+.cin-climax-word {
+  font-family: "Noto Serif SC", serif; font-weight: 900;
+  font-size: clamp(64px, 14vw, 168px); line-height: .9; letter-spacing: -.05em;
+  color: var(--cin-ink);
+  background: var(--cin-paper); padding: 12px 36px 18px;
+  border: 5px solid var(--cin-ink); border-radius: 12px;
+  display: inline-block;
+  box-shadow: 0 10px 0 var(--cin-accent), 0 20px 50px rgba(23, 23, 23, 0.25);
+  transform: rotate(-1deg);
+}
+.cin-climax-word .acc { color: var(--cin-accent); font-style: italic; }
+.cin-climax-sub {
+  margin-top: 22px; font-family: "Space Grotesk", monospace; font-size: 13px;
+  letter-spacing: .3em; text-transform: uppercase; color: var(--cin-ink); font-weight: 800;
+  display: inline-block; padding: 7px 18px;
+  background: var(--cin-amber); border: 2.5px solid var(--cin-ink); border-radius: 999px;
+  box-shadow: 0 3px 0 var(--cin-ink);
+}
+.cin-climax-burst {
+  position: absolute; left: 50%; top: 46%; width: 80px; height: 80px;
+  pointer-events: none;
+  background:
+    /* 星形：4 个三角形挤压 + 圆形核 */
+    conic-gradient(from 0deg, var(--cin-accent) 0% 25%, var(--cin-amber) 25% 50%, var(--cin-accent) 50% 75%, var(--cin-amber) 75% 100%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+}
+#cin-climax.is-show .cin-climax-burst { animation: cin-bloom 2.6s cubic-bezier(.16,.84,.2,1) forwards; }
+@keyframes cin-bloom {
+  0% { transform: translate(-50%, -50%) scale(0) rotate(0); opacity: 1; }
+  16% { transform: translate(-50%, -50%) scale(14) rotate(45deg); opacity: 0.3; }
+  100% { transform: translate(-50%, -50%) scale(28) rotate(180deg); opacity: 0; }
+}
+#cin-climax.ending { background:
+  radial-gradient(ellipse 70% 50% at 50% 50%, color-mix(in srgb, var(--c-accent, #ffc857) 22%, transparent), transparent 60%),
+  var(--cin-paper); }
+#cin-climax.ending .cin-climax-word .acc {
+  color: var(--c-accent, #ffc857);
+}
+#cin-climax.ending .cin-climax-tag { color: var(--c-accent, #ffc857); border-color: var(--c-accent, #ffc857); }
+#cin-climax.ending .cin-climax-word { box-shadow: 0 10px 0 var(--c-accent, #ffc857), 0 20px 50px color-mix(in srgb, var(--c-accent, #ffc857) 30%, transparent); }
+
+/* ============================================================
+   UI 增强（与 styles.css v5 协同）
+   ============================================================ */
+.brand-mark { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.brand-lockup:hover .brand-mark { transform: rotate(8deg) scale(1.06); }
+
+.hero-copy h2 {
+  font-family: "Noto Serif SC", serif; font-weight: 900;
+  letter-spacing: -.02em; line-height: 1.02;
+}
+.hero-copy h2 em { font-style: normal; }
+
+.panel, .stat-card, .department-item, .choice-button, .candidate-button, .skill-item, .log-item {
+  transition: transform .25s cubic-bezier(.2,.8,.2,1), border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.tilt { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); }
+.primary-button { will-change: transform; }
+.stat-bar span { transition: width .8s cubic-bezier(.2,.9,.2,1); }
+.section-header h3 { font-family: "Noto Serif SC", serif; }
+
+.cin-scrollhint {
+  position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 5;
+  font-family: "Space Grotesk", monospace; font-size: 9px; letter-spacing: .3em;
+  color: var(--cin-ink); text-transform: uppercase; font-weight: 800;
+  opacity: 0; transition: opacity .6s ease;
+  background: var(--cin-paper); padding: 6px 12px;
+  border: 2px solid var(--cin-ink); border-radius: 999px;
+  box-shadow: 0 3px 0 var(--cin-ink);
+}
+.cin-scrollhint.is-in { opacity: .85; }
+
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+.reveal.is-in { opacity: 1; transform: none; }
+
+/* ============================================================
+   技能抽取：三张牌「发牌」入场 + 选定锁定闪光
+   ============================================================ */
+.candidate-button.is-deal {
+  position: relative; overflow: hidden;
+  animation: skillDeal .7s cubic-bezier(.2,.85,.25,1) both;
+}
+@keyframes skillDeal {
+  0%   { opacity: 0; transform: translateY(40px) rotateX(20deg) scale(.9); }
+  60%  { transform: translateY(-4px) rotateX(-2deg) scale(1.02); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+.candidate-button.is-deal::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 200, 87, 0.6) 50%, transparent 70%);
+  background-size: 260% 100%; opacity: 0;
+  animation: skillShine 1s ease .1s both;
+}
+@keyframes skillShine {
+  0% { opacity: 0; background-position: 140% 0; }
+  35% { opacity: 1; }
+  100% { opacity: 0; background-position: -40% 0; }
+}
+.candidate-button.is-pick {
+  animation: skillPick .55s cubic-bezier(.34, 1.56, .64, 1) both;
+  border-color: var(--cin-accent) !important;
+  background: linear-gradient(160deg, rgba(255, 125, 59, 0.2), var(--cin-paper)) !important;
+  box-shadow: 0 0 0 3px var(--cin-accent), 0 8px 0 var(--cin-ink) !important;
+}
+@keyframes skillPick {
+  0%   { transform: scale(1) rotate(0); }
+  35%  { transform: scale(1.12) rotate(-2deg); }
+  65%  { transform: scale(1.04) rotate(1deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.candidate-button.is-pick::before {
+  content: "已习得"; position: absolute; top: 10px; right: 12px; z-index: 2;
+  padding: 5px 10px; border-radius: 6px;
+  font-family: "Space Grotesk", monospace; font-size: 10px;
+  letter-spacing: .14em; color: var(--cin-paper); background: var(--cin-success);
+  border: 2px solid var(--cin-ink); font-weight: 900;
+  box-shadow: 0 2px 0 var(--cin-ink);
+}
+
+/* ============================================================
+   降级：尊重动效偏好
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  #cin-grain, .cin-ticker-track,
+  .cin-title.is-in .glitch::before, .cin-title.is-in .glitch::after,
+  .cin-twist-word::before, .cin-twist-word::after,
+  .candidate-button.is-deal, .candidate-button.is-pick,
+  .candidate-button.is-deal::after { animation: none !important; }
+  #cin-bg { display: none; }
+  .reveal { opacity: 1; transform: none; }
+  .candidate-button.is-deal { opacity: 1; transform: none; filter: none; }
+  .pulse-dot { animation: none; }
+}

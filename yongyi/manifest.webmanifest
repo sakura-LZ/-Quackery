@@ -1,0 +1,19 @@
+{
+  "name": "庸医觉醒系统 · 临床轮转模拟器",
+  "short_name": "庸医觉醒",
+  "description": "二次元叙事文字游戏 · 在脑海中进行多科室临床轮转，把每一次选择变成真正的成长。",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050a12",
+  "theme_color": "#0a1322",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

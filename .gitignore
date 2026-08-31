@@ -1,0 +1,27 @@
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 依赖 / 构建
+node_modules/
+dist/
+build/
+
+# 调试输出 / 临时文件
+*.log
+*_out.txt
+_tmp*/
+tmp/
+
+# WorkBuddy 项目数据
+.workbuddy/
+
+# 开发期 Node 校验脚本（非运行时）
+balance.js
+balance_sim.js
+gen_music.js
+gen_music.ps1
+rewrite_depts.js
+verify_obgyn.js
+_check.js
